@@ -1,0 +1,43 @@
+1st step
+
+import pandas as pd 
+
+import numpy as np 
+
+import seaborn as sns
+
+import matplotlib.pyplot as plt
+
+%matplotlib inline 
+
+import warnings
+warnings.filterwarnings('ignore')
+
+
+df= pd.read_csv('D:/Dataset/UKMNCT_IIoT_FDIA.csv')
+
+df =df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]
+df.head()
+
+
+2nd step
+X = df.drop('marker',axis=1)
+y = df['marker']
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=.2,random_state=21)
+
+df['marker'].value_counts()
+
+
+3rd Step
+df =df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]
+df.head()
+
+
+4th Step
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+df['marker'] = encoder.fit_transform(df['marker'])
+df.head()
+
