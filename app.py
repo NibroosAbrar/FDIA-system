@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import json
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
 from dotenv import load_dotenv
@@ -11,8 +12,13 @@ st.set_page_config(layout="wide")
 project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
+# Konversi AttrDict ke string JSON
+google_credentials_json = json.dumps(st.secrets["GOOGLE_APPLICATION_CREDENTIALS"])
+
+# Set environment variable dengan string JSON
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_json
+
 # Authentication
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = st.secrets['GOOGLE_APPLICATION_CREDENTIALS']  
 vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
 
 # Initialize the model
