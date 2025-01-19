@@ -12,11 +12,8 @@ st.set_page_config(layout="wide")
 project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
-# Konversi AttrDict ke string JSON
-google_credentials_json = json.dumps(st.secrets["GOOGLE_APPLICATION_CREDENTIALS"])
-
 # Set environment variable dengan string JSON
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_json
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
 
 # Authentication
 vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
