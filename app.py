@@ -12,8 +12,18 @@ st.set_page_config(layout="wide")
 project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
-# Set environment variable dengan string JSON
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
+# # Set environment variable dengan string JSON
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
+
+# Tulis kredensial dari st.secrets ke file sementara
+with open("google_credentials.json", "w") as f:
+    f.write(st.secrets["GOOGLE_APPLICATION_CREDENTIALS"])
+
+# Set environment variable ke file sementara
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
+
+# Tes apakah environment variable berhasil di-set
+print("GOOGLE_APPLICATION_CREDENTIALS:", os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
 # Authentication
 vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
