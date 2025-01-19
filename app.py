@@ -12,6 +12,7 @@ project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
 # Authentication
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "sparkdatathon-2025-student-5-3c953f94f68a.json"  
 vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
 
 # Initialize the model
