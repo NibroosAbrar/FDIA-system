@@ -12,7 +12,7 @@ project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
 # Authentication
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]  
+os.getenv["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]  
 vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
 
 # Initialize the model
@@ -47,6 +47,7 @@ def handle_send():
 
 def handle_clear():
     st.session_state["chat_history"] = []
+    st.session_state["input_text"] = ""
 
 # CSS (Copied from Project 1)
 st.markdown(
@@ -191,16 +192,14 @@ with chat_container:
 # Input area
 input_container = st.container()
 with input_container:
-    st.text_input(
-        label="",
-        placeholder="Type your message",
-        key="input_text",
-        on_change=handle_send,
-    )
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("Send"):
-            pass
-    with col2:
-        if st.button("Clear"):
-            handle_clear()
+    with st.form("chat_form", clear_on_submit=True):
+        st.text_input(
+            label="",
+            placeholder="Type your message",
+            key="input_text"
+        )
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.form_submit_button("Send", on_click=handle_send)
+        with col2:
+            st.form_submit_button("Clear", on_click=handle_clear)
