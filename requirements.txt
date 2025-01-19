@@ -46,7 +46,7 @@ matplotlib==3.8.1
 mdurl==0.1.2
 multidict==6.0.4
 nest-asyncio==1.5.8
-numpy==2.2.2
+numpy>=1.21,<2.0
 openai==0.27.10
 openpyxl==3.1.2
 packaging==24.2
