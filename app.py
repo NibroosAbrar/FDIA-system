@@ -10,7 +10,7 @@ load_dotenv()
 
 st.set_page_config(layout="wide")
 
-# Set project details
+# Set Google Cloud project details
 project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
@@ -24,7 +24,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
 # Initialize Vertex AI
 vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
 
-# Load the generative model
+# Load the Gemini generative model
 model = GenerativeModel("gemini-1.0-pro")
 
 # Initialize session state
@@ -33,58 +33,57 @@ if "chat_history" not in st.session_state:
 if "input_text" not in st.session_state:
     st.session_state["input_text"] = ""
 
-# Define the base prompt for better contextual responses
+# Define a detailed base prompt
 BASE_PROMPT = """
-You are a chatbot integrated into a web dashboard named Sigma Boys. 
-The dashboard is designed to monitor and mitigate FDIA in IIoT systems. 
-Assist users by providing technical information, guidance on using the dashboard, and answering IIoT-related questions. 
-If unsure, provide a polite fallback response.
+You are a highly intelligent AI assistant integrated into a platform called Sigma Boys. 
+The platform includes a dashboard for monitoring and mitigating False Data Injection Attacks (FDIA) in Industrial Internet of Things (IIoT) systems. 
+Your primary tasks are:
+1. Assisting users with technical questions about FDIA, IIoT, and the platform.
+2. Explaining platform features and functionalities when asked.
+3. Answering general questions unrelated to the platform accurately and politely.
+
+Always adapt your tone and depth of explanation based on the user's question. If you don't know the answer, suggest a possible next step or external resource.
 """
 
-# Handle user input and AI response
+# Function to generate a response
+def generate_response(user_input):
+    # Combine the base prompt with the user's input
+    prompt = BASE_PROMPT + "\nUser: " + user_input
+    try:
+        # Generate content using the Gemini model
+        response = model.generate_content(prompt, stream=True)
+        return "".join(res.text for res in response)
+    except Exception as e:
+        # Fallback response in case of an error
+        return "I'm sorry, I couldn't process your request. Please try again later."
+
+# Handle send button click
 def handle_send():
-    user_text = st.session_state["input_text"]  # Get text from the input widget
+    user_text = st.session_state["input_text"]  # Get text from input widget
     if user_text.strip():
         # Add user message to chat history
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         
-        # Generate AI response with keyword detection and fallback logic
-        if "dashboard" in user_text.lower():
-            ai_response = (
-                "You can navigate the dashboard using the menu on the left. "
-                "Features include FDIA detection, mitigation, and IIoT system monitoring."
-            )
-        elif "FDIA" in user_text.lower() or "IIoT" in user_text.lower():
-            ai_response = (
-                "FDIA stands for False Data Injection Attacks, which are cyberattacks targeting data integrity in IoT systems. "
-                "Our system mitigates these attacks by using advanced algorithms and anomaly detection."
-            )
-        else:
-            # Generate response using the Gemini model
-            prompt = BASE_PROMPT + "\nUser: " + user_text
-            try:
-                response = model.generate_content(prompt, stream=True)
-                ai_response = "".join(res.text for res in response)
-            except Exception as e:
-                ai_response = "I'm sorry, I couldn't process your request. Please try again later."
+        # Generate AI response
+        ai_response = generate_response(user_text)
         
         # Add AI response to chat history
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
         
-        # Clear the input text
+        # Clear input text
         st.session_state["input_text"] = ""
     else:
         st.warning("Input cannot be empty. Please type something!")
 
+# Handle clear button click
 def handle_clear():
     st.session_state["chat_history"] = []
     st.session_state["input_text"] = ""
 
-# CSS styling for the app
+# CSS styling
 st.markdown(
     """
     <style>
-    html, body, .stApp { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
     .chat-message { margin: 10px 0; padding: 10px; border-radius: 5px; max-width: 80%; font-family: Arial, sans-serif; }
     .user-message { text-align: right; margin-left: auto; }
     .ai-message { text-align: left; margin-right: auto; }
@@ -93,7 +92,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Main UI components
+# Main UI
 st.markdown('<h1 class="centered-title">Sigma Boys - Spark</h1>', unsafe_allow_html=True)
 st.markdown('<h3 class="centered-subtitle">Detection and Mitigation System for FDIA in IIoT</h3>', unsafe_allow_html=True)
 
