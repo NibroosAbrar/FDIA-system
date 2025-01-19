@@ -6,3 +6,4 @@ openai
 google-auth
 requests
 python-dotenv
+json
