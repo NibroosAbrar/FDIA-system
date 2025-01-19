@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from google.cloud import aiplatform
+import vertexai
 from vertexai.preview.generative_models import GenerativeModel
 from dotenv import load_dotenv
 
@@ -12,7 +12,7 @@ project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
 # Authentication
-aiplatform.init(project=project_id, location=project_region)
+vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
 
 # Initialize the model
 model = GenerativeModel("gemini-1.0-pro")
