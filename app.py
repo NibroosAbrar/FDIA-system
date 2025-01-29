@@ -134,7 +134,7 @@ Blokir IP mencurigakan di firewall.
 Cek log lebih lanjut di SIEM atau packet capture.
 Gunakan aturan IDS/IPS untuk mendeteksi pola serangan.
 
-📌 Daftar 31 Fitur utama dalam Log Jaringan (FDIA Detection System) (**DAFTAR INI ADALAH FITUR UTAMA, TETAPI ADA KEMUNGKINAN ADA FITUR LAIN YANG BELUM DISEBUTKAN**)
+📌 Daftar 30 Fitur utama dalam Log Jaringan (FDIA Detection System) (**DAFTAR INI ADALAH FITUR UTAMA, TETAPI ADA KEMUNGKINAN ADA FITUR LAIN YANG BELUM DISEBUTKAN**)
 1️⃣ HTTP (Hypertext Transfer Protocol)
 http_response_body_len → Panjang (dalam byte) dari body HTTP response yang diterima oleh client.
 http_resp_mime_types → Tipe MIME dari respons HTTP (misal: text/html, application/json, image/png).
@@ -169,9 +169,8 @@ proto (Protocol) → Protokol jaringan yang digunakan (TCP, UDP, ICMP).
 conn_state (Connection State) → Status koneksi antara client dan server (S0, S1, SF, dll.).
 service → Jenis layanan jaringan yang terdeteksi (http, dns, ftp, dll.).
 dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
-5️⃣ Prediksi Model Machine Learning
-prediction/marker → Hasil klasifikasi dari model machine learning (Normal atau Attack).
 
+**YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 """
 
 # Function to generate a response
