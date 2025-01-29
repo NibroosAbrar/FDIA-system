@@ -170,8 +170,7 @@ conn_state (Connection State) → Status koneksi antara client dan server (S0, S
 service → Jenis layanan jaringan yang terdeteksi (http, dns, ftp, dll.).
 dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 
-**YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, KEMUNGKINAN,
-SEKITAR, ANTARA, MENDEKATI, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
+**YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 """
 
 # Function to generate a response
