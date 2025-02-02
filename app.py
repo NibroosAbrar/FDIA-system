@@ -291,7 +291,7 @@ st.markdown(
 )
 
 # MAIN
-st.markdown('<h1 class="centered-title">Sigma Boys - Spark</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="centered-title">Sigma AI</h1>', unsafe_allow_html=True)
 st.markdown('<h3 class="centered-subtitle">Detection and Mitigation System for FDIA in IIoT</h3>', unsafe_allow_html=True)
 
 # Shortcut to Chatbot
@@ -316,7 +316,7 @@ st.components.v1.html(
 )
 
 # Chat section
-st.markdown('<h2 id="chatbot">Chatbot - Sigma Boys</h2>', unsafe_allow_html=True)
+st.markdown('<h2 id="chatbot">Chatbot - Sigma AI</h2>', unsafe_allow_html=True)
 
 # Link to return to Dashboard
 st.markdown(
