@@ -335,7 +335,7 @@ st.components.v1.html(
                     return;
                 }
 
-                console.log("Embedding dashboard with ID: 20c73015-80ec-4d3b-b40c-260e4cea7349");
+                console.log("Embedding dashboard with ID: 883359f9-6bf3-468e-9d70-e391dcfa3542");
 
                 try {
                     supersetEmbeddedSdk.embedDashboard({
