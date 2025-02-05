@@ -309,48 +309,16 @@ st.markdown(
 st.markdown("### Dashboard")
 st.components.v1.html(
     """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-        <style>
-            #superset-container {
-                width: 100%;
-                height: 600px;
-                border: none;
-            }
-        </style>
-    </head>
-    <body>
-        <h2>Bliv Dashboard</h2>
-        <div id="superset-container"></div>
+    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                console.log("Checking SDK...");
-                console.log("supersetEmbeddedSdk:", typeof supersetEmbeddedSdk);
-
-                if (typeof supersetEmbeddedSdk === "undefined") {
-                    console.error("Superset SDK gagal dimuat. Periksa URL CDN atau jaringan.");
-                    return;
-                }
-
-                console.log("Embedding dashboard with ID: 883359f9-6bf3-468e-9d70-e391dcfa3542");
-
-                try {
-                    supersetEmbeddedSdk.embedDashboard({
-                        id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
-                        supersetDomain: "https://dashboard.pulse.bliv.id",
-                        mountPoint: document.getElementById("superset-container"),
-                        iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'],
-                    }).catch(error => console.error("Embed failed:", error));
-                } catch (error) {
-                    console.error("Critical SDK Error:", error);
-                }
-            });
-        </script>
-    </body>
-    </html>
+    <script>
+    supersetEmbeddedSdk.embedDashboard({
+            id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
+            supersetDomain: "https://dashboard.pulse.bliv.id",
+            mountPoint: document.getElementById("superset-container"),
+            iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'], 
+      });
+</script>
     """,
     height=700,
 )
