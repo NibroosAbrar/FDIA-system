@@ -309,12 +309,12 @@ st.markdown(
 st.markdown("### Dashboard")
 st.components.v1.html(
     """
-    <script src="https://cdn.jsdelivr.net/npm/@superset-ui/embedded-sdk@0.2.0"></script>
+    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
     <div id="superset-container"></div>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
             if (typeof supersetEmbeddedSdk === "undefined") {
-                console.error("Superset SDK gagal dimuat. Periksa URL SDK atau jaringan.");
+                console.error("SDK tidak dimuat. Coba periksa URL atau jaringan.");
                 return;
             }
 
@@ -325,11 +325,12 @@ st.components.v1.html(
                 supersetDomain: "https://dashboard.pulse.bliv.id",
                 mountPoint: document.getElementById("superset-container"),
             }).catch(error => console.error("Embed failed:", error));
-        });
+        }, 2000);
     </script>
     """,
     height=600,
 )
+
 
 
 # Chat section
