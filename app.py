@@ -314,25 +314,16 @@ st.components.v1.html(
     <div id="superset-container" style="width:100%; height:600px;"></div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            if (typeof supersetEmbeddedSdk === "undefined") {
-                console.error("Superset SDK gagal dimuat. Periksa URL CDN atau jaringan.");
-                return;
-            }
-
-            console.log("Embedding dashboard with ID: 20c73015-80ec-4d3b-b40c-260e4cea7349");
-
-            supersetEmbeddedSdk.embedDashboard({
-                id: "20c73015-80ec-4d3b-b40c-260e4cea7349", // ID dashboard
-                supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
-                mountPoint: document.getElementById("superset-container"), // Tempat dashboard ditampilkan
-                dashboardUiConfig: { // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional), urlParams (optional)
+        supersetEmbeddedSdk.embedDashboard({
+            id: "20c73015-80ec-4d3b-b40c-260e4cea7349", // ID dashboard
+            supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
+            mountPoint: document.getElementById("superset-container"), // Tempat dashboard ditampilkan
+            dashboardUiConfig: { // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional), urlParams (optional)
                   hideTitle: true,
                   filters: {
                       expanded: true,
-                      },
-            }).catch(error => console.error("Embed failed:", error));
-        });
+            }
+            });
     </script>
     """,
     height=600,
