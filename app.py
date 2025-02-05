@@ -311,17 +311,17 @@ st.markdown("### Dashboard")
 st.markdown('<div id="superset-container"></div>', unsafe_allow_html=True)
 
 st.components.v1.html(
-    f """
+    f"""
     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            supersetEmbeddedSdk.embedDashboard({
-                id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
-                supersetDomain: "https://dashboard.pulse.bliv.id",
+        document.addEventListener("DOMContentLoaded", function() {{
+            supersetEmbeddedSdk.embedDashboard({{
+                id: "{dashboard_id}",
+                supersetDomain: "{superset_domain}",
                 mountPoint: document.getElementById("superset-container"),
-                iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox']
-            });
-        });
+                iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
+            }});
+        }});
     </script>
     """,
     height=700,
