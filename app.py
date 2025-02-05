@@ -310,26 +310,29 @@ st.markdown("### Dashboard")
 st.components.v1.html(
     """
     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-    <div id="superset-container"></div>
+
+    <div id="superset-container" style="width:100%; height:600px;"></div>
+
     <script>
-        setTimeout(function() {
+        document.addEventListener("DOMContentLoaded", function() {
             if (typeof supersetEmbeddedSdk === "undefined") {
-                console.error("SDK tidak dimuat. Coba periksa URL atau jaringan.");
+                console.error("Superset SDK gagal dimuat. Periksa URL CDN atau jaringan.");
                 return;
             }
 
             console.log("Embedding dashboard with ID: 20c73015-80ec-4d3b-b40c-260e4cea7349");
 
             supersetEmbeddedSdk.embedDashboard({
-                id: "20c73015-80ec-4d3b-b40c-260e4cea7349",
-                supersetDomain: "https://dashboard.pulse.bliv.id",
-                mountPoint: document.getElementById("superset-container"),
+                id: "20c73015-80ec-4d3b-b40c-260e4cea7349", // ID dashboard
+                supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
+                mountPoint: document.getElementById("superset-container"), // Tempat dashboard ditampilkan
             }).catch(error => console.error("Embed failed:", error));
-        }, 2000);
+        });
     </script>
     """,
     height=600,
 )
+
 
 
 
