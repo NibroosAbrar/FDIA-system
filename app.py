@@ -312,17 +312,25 @@ st.components.v1.html(
     <script src="https://cdn.jsdelivr.net/npm/@superset-ui/embedded-sdk@0.2.0"></script>
     <div id="superset-container"></div>
     <script>
-        console.log("Embedding dashboard with ID: 20c73015-80ec-4d3b-b40c-260e4cea7349");
-        
-        supersetEmbeddedSdk.embedDashboard({
-            id: "20c73015-80ec-4d3b-b40c-260e4cea7349",
-            supersetDomain: "https://dashboard.pulse.bliv.id",
-            mountPoint: document.getElementById("superset-container"),
-        }).catch(error => console.error("Embed failed:", error));
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof supersetEmbeddedSdk === "undefined") {
+                console.error("Superset SDK gagal dimuat. Periksa URL SDK atau jaringan.");
+                return;
+            }
+
+            console.log("Embedding dashboard with ID: 20c73015-80ec-4d3b-b40c-260e4cea7349");
+
+            supersetEmbeddedSdk.embedDashboard({
+                id: "20c73015-80ec-4d3b-b40c-260e4cea7349",
+                supersetDomain: "https://dashboard.pulse.bliv.id",
+                mountPoint: document.getElementById("superset-container"),
+            }).catch(error => console.error("Embed failed:", error));
+        });
     </script>
     """,
     height=600,
 )
+
 
 # Chat section
 st.markdown("### Chatbot - Sigma AI")
