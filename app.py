@@ -316,8 +316,8 @@ st.components.v1.html(
     <script>
         document.addEventListener("DOMContentLoaded", function() {{
             supersetEmbeddedSdk.embedDashboard({{
-                id: "{dashboard_id}",
-                supersetDomain: "{superset_domain}",
+                id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
+                supersetDomain: "https://dashboard.pulse.bliv.id",
                 mountPoint: document.getElementById("superset-container"),
                 iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
             }});
