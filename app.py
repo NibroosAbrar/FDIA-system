@@ -319,6 +319,7 @@ st.components.v1.html(
                 id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
                 supersetDomain: "https://dashboard.pulse.bliv.id",
                 mountPoint: document.getElementById("superset-container"),
+                fetchGuestToken: () => fetchGuestTokenFromBackend(),
                 iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
             }});
         }});
