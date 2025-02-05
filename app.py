@@ -314,7 +314,7 @@ st.components.v1.html(
     <script>
     supersetEmbeddedSdk.embedDashboard({
             id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
-            supersetDomain: "https://dashboard.pulse.bliv.id",
+            supersetDomain: "https://dashboard.pulse.bliv.id/bliv/dashboard/sigma-dashboard",
             mountPoint: document.getElementById("superset-container"),
             iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'], 
       });
