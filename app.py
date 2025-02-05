@@ -309,11 +309,12 @@ st.markdown(
 st.markdown("### Dashboard")
 st.components.v1.html(
     """
-    <iframe src="https://bliv.ai/embed/dashboard" 
-            style="width:100%; height:500px; border:none;"></iframe>
+    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/p/dDlM5yqMY4g/" 
+            style="width:100%; height:600px; border:none;"></iframe>
     """,
-    height=500,
+    height=600,
 )
+
 
 # Chat section
 st.markdown('<h2 id="chatbot">Chatbot - Sigma AI</h2>', unsafe_allow_html=True)
