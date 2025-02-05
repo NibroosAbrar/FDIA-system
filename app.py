@@ -339,7 +339,7 @@ st.components.v1.html(
 
                 try {
                     supersetEmbeddedSdk.embedDashboard({
-                        id: "20c73015-80ec-4d3b-b40c-260e4cea7349",
+                        id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
                         supersetDomain: "https://dashboard.pulse.bliv.id",
                         mountPoint: document.getElementById("superset-container"),
                     }).catch(error => console.error("Embed failed:", error));
