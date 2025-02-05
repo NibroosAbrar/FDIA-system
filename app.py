@@ -311,7 +311,7 @@ st.markdown("### Dashboard")
 st.markdown('<div id="superset-container"></div>', unsafe_allow_html=True)
 
 st.components.v1.html(
-    """
+    f """
     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
