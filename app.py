@@ -308,8 +308,8 @@ st.markdown(
 # Dashboard section
 st.markdown("### Dashboard")
 st.components.v1.html(
-    """
-    <script type="module" src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    f"""
+    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
 
     <script>
     embedDashboard({
@@ -318,7 +318,7 @@ st.components.v1.html(
             mountPoint: document.getElementById("superset-container"),
             iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'], 
       });
-</script>
+    </script>
     """,
     height=700,
 )
