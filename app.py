@@ -309,7 +309,7 @@ st.markdown(
 st.markdown("### Dashboard")
 st.components.v1.html(
     """
-    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    <script type="module" src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
 
     <script>
     supersetEmbeddedSdk.embedDashboard({
