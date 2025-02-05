@@ -326,6 +326,11 @@ st.components.v1.html(
                 id: "20c73015-80ec-4d3b-b40c-260e4cea7349", // ID dashboard
                 supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
                 mountPoint: document.getElementById("superset-container"), // Tempat dashboard ditampilkan
+                dashboardUiConfig: { // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional), urlParams (optional)
+                  hideTitle: true,
+                  filters: {
+                      expanded: true,
+                      },
             }).catch(error => console.error("Embed failed:", error));
         });
     </script>
