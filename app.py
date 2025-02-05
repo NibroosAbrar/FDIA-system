@@ -314,6 +314,7 @@ st.components.v1.html(
     <div id="superset-container" style="width:100%; height:600px;"></div>
 
     <script>
+    src="https://unpkg.com/@superset-ui/embedded-sdk"
         supersetEmbeddedSdk.embedDashboard({
             id: "20c73015-80ec-4d3b-b40c-260e4cea7349", // ID dashboard
             supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
