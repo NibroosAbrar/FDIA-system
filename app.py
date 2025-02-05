@@ -321,8 +321,8 @@ st.components.v1.html(
             dashboardUiConfig: { // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional), urlParams (optional)
                   hideTitle: true,
                   filters: {
-                      expanded: true,
-            }
+                      expanded: true }
+                }
             });
     </script>
     """,
