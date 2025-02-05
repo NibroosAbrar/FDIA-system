@@ -309,25 +309,41 @@ st.markdown(
 st.markdown("### Dashboard")
 st.components.v1.html(
     """
-    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+        <style>
+            #superset-container {
+                width: 100%;
+                height: 600px;
+                border: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="superset-container"></div>
 
-    <div id="superset-container" style="width:100%; height:600px;"></div>
-
-    <script>
-    src="https://unpkg.com/@superset-ui/embedded-sdk"
-        supersetEmbeddedSdk.embedDashboard({
-            id: "20c73015-80ec-4d3b-b40c-260e4cea7349", // ID dashboard
-            supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
-            mountPoint: document.getElementById("superset-container"), // Tempat dashboard ditampilkan
-            dashboardUiConfig: { // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional), urlParams (optional)
-                  hideTitle: true,
-                  filters: {
-                      expanded: true }
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                if (typeof supersetEmbeddedSdk === "undefined") {
+                    console.error("Superset SDK gagal dimuat. Periksa URL atau jaringan.");
+                    return;
                 }
+
+                console.log("Embedding dashboard with ID: 20c73015-80ec-4d3b-b40c-260e4cea7349");
+
+                supersetEmbeddedSdk.embedDashboard({
+                    id: "20c73015-80ec-4d3b-b40c-260e4cea7349", // ID Dashboard Bliv
+                    supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
+                    mountPoint: document.getElementById("superset-container"),
+                }).catch(error => console.error("Embed failed:", error));
             });
-    </script>
+        </script>
+    </body>
+    </html>
     """,
-    height=600,
+    height=700,
 )
 
 
