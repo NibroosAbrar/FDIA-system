@@ -262,6 +262,7 @@ st.markdown(
 )
 
 # MAIN
+st.markdown('<h1 class="centered-title">Sigma Boys - Spark</h1>', unsafe_allow_html=True)
 st.markdown('<h1 class="centered-title">Sigma AI</h1>', unsafe_allow_html=True)
 st.markdown('<h3 class="centered-subtitle">Detection and Mitigation System for FDIA in IIoT</h3>', unsafe_allow_html=True)
 
@@ -280,16 +281,14 @@ st.markdown(
 st.markdown("### Dashboard")
 st.components.v1.html(
     """
-    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/p/dDlM5yqMY4g/" 
-    f"""
-    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/p/dDlM5yqMY4g/?sdk_id=20c73015-80ec-4d3b-b40c-260e4cea7349"
-            style="width:100%; height:600px; border:none;"></iframe>
+    <iframe src="https://bliv.ai/embed/dashboard" 
+            style="width:100%; height:500px; border:none;"></iframe>
     """,
-    height=600,
+    height=500,
 )
 
-
 # Chat section
+st.markdown('<h2 id="chatbot">Chatbot - Sigma Boys</h2>', unsafe_allow_html=True)
 st.markdown('<h2 id="chatbot">Chatbot - Sigma AI</h2>', unsafe_allow_html=True)
 
 # Link to return to Dashboard
