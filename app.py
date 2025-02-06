@@ -13,12 +13,6 @@ st.set_page_config(layout="wide")
 project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
-# Dashboard Configuration
-SUP_URL = "https://dashboard.pulse.bliv.id"
-DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
-USERNAME = "pulse"
-PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
-
 # Tulis kredensial dari st.secrets ke file sementara
 with open("google_credentials.json", "w") as f:
     f.write(st.secrets["GOOGLE_APPLICATION_CREDENTIALS"])
