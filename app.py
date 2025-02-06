@@ -324,8 +324,8 @@ st.components.v1.html(f"""
 
                 // STEP 1: Login ke API untuk mendapatkan access token
                 const login_body = {{
-                    "username": "nibroos",
-                    "password": "Abroor@kun0811",
+                    "username": "pulse",
+                    "password": "f6d72ad2-e454-11ef-9cd2-0242ac120002",
                     "provider": "db",
                     "refresh": true
                 }};
