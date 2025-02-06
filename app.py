@@ -318,7 +318,7 @@ st.components.v1.html(
                   id: "883359f9-6bf3-468e-9d70-e391dcfa3542", // ID dari modal yang Anda dapatkan
                   supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
                   mountPoint: document.getElementById("dashboard-container"), // Elemen HTML tempat dashboard akan dimasukkan
-                  fetchGuestToken: async () => null, // Coba tanpa token (jika tidak membutuhkan autentikasi)
+                  fetchGuestToken: async () => dDlM5yqMY4g, // Coba tanpa token (jika tidak membutuhkan autentikasi)
             });
         }});
     </script>
