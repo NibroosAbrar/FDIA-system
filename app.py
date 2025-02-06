@@ -346,7 +346,12 @@ dashboard_html = f"""
     </script>
 """
 # MAIN
-st.title("Sigma AI - FDIA Detection & Mitigation System")
+st.markdown(
+    """
+    <h1 style='text-align: center;'>Sigma AI - FDIA Detection & Mitigation System</h1>
+    """,
+    unsafe_allow_html=True
+)
 
 # Display Dashboard (Full Width)
 st.subheader("📊 Sigma Dashboard")
