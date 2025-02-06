@@ -156,79 +156,79 @@ dashboard_html = f"""
 """
 
 
-# def get_dashboard_data():
-#     """Menyertakan dashboard HTML dan mengambil token dari localStorage."""
+def get_dashboard_data():
+    """Menyertakan dashboard HTML dan mengambil token dari localStorage."""
     
-#     dashboard_html = f"""
-#         <script>
-#             let access_token = localStorage.getItem("superset_token");
+    dashboard_html = f"""
+        <script>
+            let access_token = localStorage.getItem("superset_token");
 
-#             console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
+            console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
 
-#             if (access_token) {{
-#                 console.log("📡 Mengirim token ke Streamlit...");
-#                 fetch("/store_token", {{
-#                     method: "POST",
-#                     headers: {{ "Content-Type": "application/json" }},
-#                     body: JSON.stringify({{ "token": access_token }})
-#                 }})
-#                 .then(response => response.json())
-#                 .then(data => {{
-#                     console.log("✅ Token berhasil dikirim ke backend:", data);
-#                     window.location.reload();  // Reload agar Streamlit bisa membaca token
-#                 }})
-#                 .catch(error => console.error("❌ Error mengirim token ke backend:", error));
-#             }} else {{
-#                 console.error("❌ Token tidak ditemukan di localStorage!");
-#             }}
-#         </script>
-#     """
+            if (access_token) {{
+                console.log("📡 Mengirim token ke Streamlit...");
+                fetch("/store_token", {{
+                    method: "POST",
+                    headers: {{ "Content-Type": "application/json" }},
+                    body: JSON.stringify({{ "token": access_token }})
+                }})
+                .then(response => response.json())
+                .then(data => {{
+                    console.log("✅ Token berhasil dikirim ke backend:", data);
+                    window.location.reload();  // Reload agar Streamlit bisa membaca token
+                }})
+                .catch(error => console.error("❌ Error mengirim token ke backend:", error));
+            }} else {{
+                console.error("❌ Token tidak ditemukan di localStorage!");
+            }}
+        </script>
+    """
     
-#     # Tampilkan HTML di Streamlit
-#     st.components.v1.html(dashboard_html, height=10)
+    # Tampilkan HTML di Streamlit
+    st.components.v1.html(dashboard_html, height=10)
 
-#     # Ambil token dari session state setelah dikirim oleh JavaScript
-#     token = st.session_state.get("superset_token")
-#     if not token:
-#         return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
+    # Ambil token dari session state setelah dikirim oleh JavaScript
+    token = st.session_state.get("superset_token")
+    if not token:
+        return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
 
-#     # Mengambil data dari Superset API menggunakan token
-#     SUP_URL = "https://dashboard.pulse.bliv.id"
-#     API_URL = f"{SUP_URL}/api/v1/chart/data"
-#     DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
+    # Mengambil data dari Superset API menggunakan token
+    SUP_URL = "https://dashboard.pulse.bliv.id"
+    API_URL = f"{SUP_URL}/api/v1/chart/data"
+    DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
     
-#     headers = {
-#         "Authorization": f"Bearer {token}",
-#         "Content-Type": "application/json"
-#     }
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
-#     data_request = {"dashboard_id": DASHBOARD_ID}
+    data_request = {"dashboard_id": DASHBOARD_ID}
 
-#     try:
-#         response = requests.post(API_URL, headers=headers, json=data_request)
-#         response.raise_for_status()
-#         return response.json()
-#     except requests.exceptions.RequestException as e:
-#         return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
+    try:
+        response = requests.post(API_URL, headers=headers, json=data_request)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
         
-# # Buat Flask app di dalam Streamlit
-# app = Flask(__name__)
+# Buat Flask app di dalam Streamlit
+app = Flask(__name__)
 
-# @app.route("/store_token", methods=["POST"])
-# def store_token():
-#     """Menerima token dari JavaScript dan menyimpannya ke session_state Streamlit."""
-#     data = request.get_json()
+@app.route("/store_token", methods=["POST"])
+def store_token():
+    """Menerima token dari JavaScript dan menyimpannya ke session_state Streamlit."""
+    data = request.get_json()
 
-#     # Debugging untuk melihat data yang diterima
-#     print("🔍 Data token diterima:", data)
+    # Debugging untuk melihat data yang diterima
+    print("🔍 Data token diterima:", data)
 
-#     if not data or "token" not in data:
-#         return jsonify({"error": "Token missing"}), 400
+    if not data or "token" not in data:
+        return jsonify({"error": "Token missing"}), 400
 
-#     st.session_state["superset_token"] = data["token"]
-#     print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
+    st.session_state["superset_token"] = data["token"]
+    print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
 
-#     return jsonify({"message": "Token stored successfully"}), 200
+    return jsonify({"message": "Token stored successfully"}), 200
         
 # Define a detailed base prompt
 BASE_PROMPT = """
@@ -353,12 +353,12 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 
 # Generate a response
 def generate_response(user_input, dashboard_data):
-    #     # Ambil data dari dashboard sebelum chatbot menjawab
-    # dashboard_data = get_dashboard_data()
+        # Ambil data dari dashboard sebelum chatbot menjawab
+    dashboard_data = get_dashboard_data()
 
-    # # Jika terjadi error saat mengambil data, tampilkan error tersebut
-    # if "error" in dashboard_data:
-    #     return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
+    # Jika terjadi error saat mengambil data, tampilkan error tersebut
+    if "error" in dashboard_data:
+        return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
 
     # Format data dashboard untuk digunakan dalam prompt
     dashboard_context = json.dumps(dashboard_data, indent=2)
@@ -376,14 +376,13 @@ def handle_send():
     """
     user_text = st.session_state["input_text"]
     if user_text.strip():
-        # # Ambil data dari dashboard Superset sebelum chatbot menjawab
-        # dashboard_data = get_dashboard_data()
+        # Ambil data dari dashboard Superset sebelum chatbot menjawab
+        dashboard_data = get_dashboard_data()
         
-        # # Gunakan data dashboard dalam jawaban chatbot
-        # ai_response = generate_response(user_text, get_dashboard_data)
-        ai_response = generate_response(user_text)
+        # Gunakan data dashboard dalam jawaban chatbot
+        ai_response = generate_response(user_text, get_dashboard_data)
         
-        # st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
+        st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         
         st.session_state["input_text"] = ""
