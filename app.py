@@ -189,7 +189,16 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 """
 
 # Generate a response
-def generate_response(user_input, get_dashboard_data):
+def generate_response(user_input, dashboard_data):
+        # Ambil data dari dashboard sebelum chatbot menjawab
+    dashboard_data = get_dashboard_data()
+
+    # Jika terjadi error saat mengambil data, tampilkan error tersebut
+    if "error" in dashboard_data:
+        return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
+
+    # Format data dashboard untuk digunakan dalam prompt
+    dashboard_context = json.dumps(dashboard_data, indent=2)
     prompt = "FDIA Detection System Chatbot:\nUser: " + user_input
     try:
         response = model.generate_content(prompt, stream=True)
