@@ -346,9 +346,10 @@ dashboard_html = f"""
     </script>
 """
 # MAIN
-st.markdown('<h1 class="centered-title">Sigma Boys - Spark</h1>', unsafe_allow_html=True)
-st.markdown('<h1 class="centered-title">Sigma AI</h1>', unsafe_allow_html=True)
-st.markdown('<h3 class="centered-subtitle">Detection and Mitigation System for FDIA in IIoT</h3>', unsafe_allow_html=True)
+st.title("Sigma AI - FDIA Detection & Mitigation System")
+
+# Display Dashboard (Full Width)
+st.subheader("📊 Sigma Dashboard")
 
 # Shortcut to Chatbot
 st.markdown(
@@ -361,10 +362,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 # Display Dashboard (Full Width)
 components.html(dashboard_html, height=700)
-
 
 # Display Chatbot Below
 st.subheader("💬 Sigma Chatbot")
@@ -387,8 +386,13 @@ with st.form("chat_form", clear_on_submit=True):
         st.form_submit_button("Clear", on_click=handle_clear)
 
 # Button to Go to Dashboard (Under Sigma Chatbot)
-st.markdown("""
-    <div style="text-align:center; margin-top:20px;">
-        <a href="#8588f86d" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Dashboard</a>
-    </div>
-""", unsafe_allow_html=True)
+st.markdown(
+    """
+    <a href="#dashboard" class="shortcut-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/6821/6821002.png" alt="Dashboard Logo">
+        Go to Dashboard
+    </a>
+    """,
+    unsafe_allow_html=True
+)
+
