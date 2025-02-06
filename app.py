@@ -77,7 +77,16 @@ dashboard_html = f"""
             try {{
                 console.log("🔍 Authenticating...");
 
-                let access_token = localStorage.getItem("superset_token");
+                    let access_token = localStorage.getItem("superset_token");
+
+                    console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
+
+                    if (access_token) {
+                        console.log("📡 Mengirim token ke Streamlit...");
+                        window.parent.postMessage({ type: "TOKEN_UPDATE", token: access_token }, "*");
+                    } else {
+                        console.error("❌ Token tidak ditemukan di localStorage!");
+                    }
 
                 if (!access_token) {{
                     console.log("⚠️ Token tidak ditemukan. Melakukan login...");
