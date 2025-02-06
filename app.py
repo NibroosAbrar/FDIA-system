@@ -327,85 +327,88 @@ dashboard_html = f"""
 
     <div id="superset-container"></div>
 
-    <script>
-        const supersetUrl = "{SUP_URL}";
+<script>
+    async function authenticateAndEmbedDashboard() {
+        const supersetUrl = "{SUP_URL}"; 
         const supersetApiUrl = supersetUrl + "/api/v1/security";
         const dashboardId = "{DASHBOARD_ID}";
 
-        async function authenticateAndEmbedDashboard() {{
-            try {{
-                console.log("🔍 Authenticating...");
+        try {
+            console.log("🔍 Authenticating...");
 
-                let access_token = localStorage.getItem("superset_token");
+            let access_token = localStorage.getItem("superset_token");
 
-                if (!access_token) {{
-                    console.log("⚠️ Token tidak ditemukan. Melakukan login...");
+            if (!access_token) {
+                console.log("⚠️ Token tidak ditemukan. Melakukan login...");
 
-                    const login_body = {{
-                        "username": "{USERNAME}",
-                        "password": "{PASSWORD}",
-                        "provider": "db",
-                        "refresh": true
-                    }};
+                const login_body = {
+                    "username": "{USERNAME}",
+                    "password": "{PASSWORD}",
+                    "provider": "db",
+                    "refresh": true
+                };
 
-                    const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
-                    const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
+                const login_headers = { headers: { "Content-Type": "application/json" } };
+                const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
 
-                    access_token = loginResponse.data["access_token"];
-                    localStorage.setItem("superset_token", access_token);
-                }}
+                access_token = loginResponse.data["access_token"];
+                localStorage.setItem("superset_token", access_token);
+            }
 
-                console.log("✅ Access Token received.");
+            console.log("✅ Access Token received:", access_token);
 
-                fetch("/store_token", {{
-                    method: "POST",
-                    headers: {{ "Content-Type": "application/json" }},
-                    body: JSON.stringify({{ "token": access_token }})
-                }}).then(response => response.json())
-                  .then(data => console.log("✅ Token berhasil dikirim ke backend:", data))
-                  .catch(error => console.error("❌ Error mengirim token ke backend:", error));
+            // Kirim token ke backend Streamlit
+            await fetch("/store_token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ "token": access_token })
+            })
+            .then(response => response.json())
+            .then(data => console.log("✅ Token berhasil dikirim ke backend:", data))
+            .catch(error => console.error("❌ Error mengirim token ke backend:", error));
 
-                const guest_token_body = {{
-                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
-                    "rls": [],
-                    "user": {{
-                        "username": "report-viewer",
-                        "first_name": "report-viewer",
-                        "last_name": "report-viewer"
-                    }}
-                }};
+            const guest_token_body = {
+                "resources": [{ "type": "dashboard", "id": dashboardId }],
+                "rls": [],
+                "user": {
+                    "username": "report-viewer",
+                    "first_name": "report-viewer",
+                    "last_name": "report-viewer"
+                }
+            };
 
-                const guest_token_headers = {{
-                    headers: {{
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + access_token
-                    }}
-                }};
+            const guest_token_headers = {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + access_token
+                }
+            };
 
-                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
-                const guest_token = guestResponse.data["token"];
+            const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
+            const guest_token = guestResponse.data["token"];
 
-                console.log("✅ Guest Token received.");
+            console.log("✅ Guest Token received.");
 
-                supersetEmbeddedSdk.embedDashboard({{
-                    id: dashboardId,
-                    supersetDomain: supersetUrl,
-                    mountPoint: document.getElementById("superset-container"),
-                    fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {{
-                        hideTitle: true,
-                        filters: {{ expanded: false, visible: true }}
-                    }}
-                }});
+            supersetEmbeddedSdk.embedDashboard({
+                id: dashboardId,
+                supersetDomain: supersetUrl,
+                mountPoint: document.getElementById("superset-container"),
+                fetchGuestToken: async () => guest_token,
+                dashboardUiConfig: {
+                    hideTitle: true,
+                    filters: { expanded: false, visible: true }
+                }
+            });
 
-            }} catch (error) {{
-                console.error("❌ Dashboard error:", error);
-                alert("⚠️ Failed to load dashboard.");
-            }}
-        }}
+        } catch (error) {
+            console.error("❌ Dashboard error:", error);
+            alert("⚠️ Failed to load dashboard.");
+        }
+    }
 
-        window.onload = authenticateAndEmbedDashboard;
-    </script>
+    window.onload = authenticateAndEmbedDashboard;
+</script>
+
 """
 
 # MAIN
