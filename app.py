@@ -308,53 +308,24 @@ st.markdown(
 
 # Dashboard section
 st.markdown("### Dashboard")
-# Create a placeholder div container
-st.markdown('<div id="superset-container"></div>', unsafe_allow_html=True)
-# ID Dashboard yang diberikan oleh Bliv
-superset_dashboard_id = "883359f9-6bf3-468e-9d70-e391dcfa3542"
+st.components.v1.html(
+    """
+    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {{
+            supersetEmbeddedSdk.embedDashboard({{
+                id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
+                supersetDomain: "https://dashboard.pulse.bliv.id",
+                iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
+            }});
+        }});
+    </script>
+    """,
+    height=700,
+)
 
-# Domain Apache Superset di Bliv
-superset_domain = "https://dashboard.pulse.bliv.id"
-
-# HTML dan JavaScript untuk embed Superset Dashboard
-superset_script = f"""
-<script src="https://cdn.jsdelivr.net/npm/@superset-ui/embedded-sdk@latest"></script>
-<script>
-    supersetEmbeddedSdk.embedDashboard({{
-        id: "{superset_dashboard_id}", // ID Dashboard dari Bliv
-        supersetDomain: "{superset_domain}",
-        mountPoint: document.getElementById("dashboard-container"),
-        dashboardUiConfig: {{
-            hideTitle: false,
-            hideChartControls: false,
-        }},
-    }});
-</script>
-<div id="dashboard-container" style="width:100%; height:800px;"></div>
-"""
-
-# Tampilkan dalam Streamlit
-components.html(superset_script, height=850)
-
-# st.components.v1.html(
-#     f"""
-#     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-#     <script>
-#         document.addEventListener("DOMContentLoaded", function() {{
-#             supersetEmbeddedSdk.embedDashboard({{
-#                 id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
-#                 supersetDomain: "https://dashboard.pulse.bliv.id",
-#                 mountPoint: document.getElementById("superset-container"),
-#                 fetchGuestToken: () => fetchGuestTokenFromBackend(),
-#                 iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
-#             }});
-#         }});
-#     </script>
-#     """,
-#     height=700,
-# )
-
-
+                # mountPoint: document.getElementById("superset-container"),
+                # fetchGuestToken: () => fetchGuestTokenFromBackend(),
 
 # Chat section
 st.markdown("### Chatbot - Sigma AI")
