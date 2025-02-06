@@ -281,32 +281,17 @@ st.title("Sigma AI - FDIA Detection & Mitigation System")
 st.subheader("📊 Sigma Dashboard")
 components.html(dashboard_html, height=700)
 
-# Shortcut to Chatbot
-st.markdown(
-    """
-    <a href="#chatbot-sigma-boys" class="shortcut-button">
-        <img src="https://cdn-icons-png.flaticon.com/512/2593/2593635.png" alt="Bot Logo">
-        Go to Chatbot
-    </a>
-    """,
-    unsafe_allow_html=True
-)
+# Button to Go to Chatbot (Under Sigma Dashboard)
+st.markdown("""
+    <div style="text-align:center; margin-top:20px;">
+        <a href="#chatbot-sigma-boys" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Chatbot</a>
+    </div>
+""", unsafe_allow_html=True)
 
 # Display Chatbot Below
 st.subheader("💬 Sigma Chatbot")
-
-# Link to return to Dashboard
-st.markdown(
-    """
-    <a href="#dashboard" class="shortcut-button">
-        <img src="https://cdn-icons-png.flaticon.com/512/6821/6821002.png" alt="Dashboard Logo">
-        Go to Dashboard
-    </a>
-    """,
-    unsafe_allow_html=True
-)
-
 chat_container = st.container()
+
 with chat_container:
     for chat in st.session_state["chat_history"]:
         if chat["role"] == "user":
@@ -322,3 +307,10 @@ with st.form("chat_form", clear_on_submit=True):
         st.form_submit_button("Send", on_click=handle_send)
     with col_btn2:
         st.form_submit_button("Clear", on_click=handle_clear)
+
+# Button to Go to Dashboard (Under Sigma Chatbot)
+st.markdown("""
+    <div style="text-align:center; margin-top:20px;">
+        <a href="#dashboard" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Dashboard</a>
+    </div>
+""", unsafe_allow_html=True)
