@@ -372,7 +372,10 @@ dashboard_html = f"""
                     supersetDomain: supersetUrl,
                     mountPoint: document.getElementById("superset-container"),
                     fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {{hideTitle: true, filtersExpanded: false}}
+                    dashboardUiConfig: { 
+                        hideTitle: true,         // Sembunyikan title dashboard
+                        filters: { expanded: false }  // Jangan expand filters secara otomatis
+                    }
                 }});
             }} catch (error) {{
                 console.error("❌ Dashboard error:", error);
