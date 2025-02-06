@@ -183,7 +183,7 @@ def get_dashboard_data():
         "Content-Type": "application/json"
     }
 
-    API_URL = f"{SUP_URL}/api/v1/chart"
+    API_URL = f"{SUP_URL}/api/v1/chart/data"
     data_request = {"dashboard_id": DASHBOARD_ID}
 
     try:
