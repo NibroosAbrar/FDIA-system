@@ -322,7 +322,6 @@ st.components.v1.html(
             });
         }});
     </script>
-    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/sigma-dashboard/"></iframe>
     """,
     height=700,
 )
