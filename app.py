@@ -187,10 +187,18 @@ service → Jenis layanan jaringan yang terdeteksi (http, dns, ftp, dll.).
 dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 **YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 """
+#generate dashboard
+def get_dashboard_data():
+    """Mengambil data dashboard yang sudah disimpan di session state."""
+    if "dashboard_data" in st.session_state:
+        return st.session_state["dashboard_data"]
+    else:
+        return {"error": "Dashboard data belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
 
 # Generate a response
 def generate_response(user_input, dashboard_data):
         # Ambil data dari dashboard sebelum chatbot menjawab
+    dashboard_data = get_dashboard_data()
     dashboard_data = st.session_state["dashboard_data"]
 
     # Jika terjadi error saat mengambil data, tampilkan error tersebut
