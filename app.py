@@ -38,6 +38,8 @@ if "input_text" not in st.session_state:
     st.session_state["input_text"] = ""
 
 # Dashboard Configuration
+# Simpan token secara langsung di session state
+st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 SUP_URL = "https://dashboard.pulse.bliv.id"
 DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
 USERNAME = "pulse"
