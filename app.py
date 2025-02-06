@@ -284,7 +284,7 @@ components.html(dashboard_html, height=700)
 # Button to Go to Chatbot (Under Sigma Dashboard)
 st.markdown("""
     <div style="text-align:center; margin-top:20px;">
-        <a href="#chatbot-sigma-boys" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Chatbot</a>
+        <a href="#13ef106a" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Chatbot</a>
     </div>
 """, unsafe_allow_html=True)
 
@@ -311,6 +311,6 @@ with st.form("chat_form", clear_on_submit=True):
 # Button to Go to Dashboard (Under Sigma Chatbot)
 st.markdown("""
     <div style="text-align:center; margin-top:20px;">
-        <a href="#dashboard" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Dashboard</a>
+        <a href="#8588f86d" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Dashboard</a>
     </div>
 """, unsafe_allow_html=True)
