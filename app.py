@@ -311,12 +311,14 @@ st.markdown("### Dashboard")
 st.components.v1.html(
     """
     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    <div id="dashboard-container" style="width:100%; height:800px;"></div>
     <script>
         document.addEventListener("DOMContentLoaded", function() {{
             supersetEmbeddedSdk.embedDashboard({
-                id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
-                supersetDomain: "https://dashboard.pulse.bliv.id",
-                iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
+                  id: "883359f9-6bf3-468e-9d70-e391dcfa3542", // ID dari modal yang Anda dapatkan
+                  supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
+                  mountPoint: document.getElementById("dashboard-container"), // Tempat rendering dashboard
+                  fetchGuestToken: async () => null, // Coba tanpa token (jika tidak membutuhkan autentikasi)
             });
         }});
     </script>
@@ -324,8 +326,7 @@ st.components.v1.html(
     height=700,
 )
 
-                # mountPoint: document.getElementById("superset-container"),
-                # fetchGuestToken: () => fetchGuestTokenFromBackend(),
+
 
 # Chat section
 st.markdown("### Chatbot - Sigma AI")
