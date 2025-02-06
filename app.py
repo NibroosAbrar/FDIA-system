@@ -3,10 +3,13 @@ import os
 import json
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 
+# Streamlit page config
 st.set_page_config(layout="wide")
 
 project_id = os.getenv("project.id")
@@ -22,10 +25,8 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
 # Tes apakah environment variable berhasil di-set
 print("GOOGLE_APPLICATION_CREDENTIALS:", os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
-# Authentication
+# Initialize Vertex AI
 vertexai.init(project="sparkdatathon-2025-student-5", location="us-central1")
-
-# Initialize the model
 model = GenerativeModel("gemini-2.0-flash-exp")
 
 # Initialize session state
@@ -33,6 +34,12 @@ if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
 if "input_text" not in st.session_state:
     st.session_state["input_text"] = ""
+
+# Dashboard Configuration
+SUP_URL = "https://dashboard.pulse.bliv.id"
+DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
+USERNAME = "pulse"
+PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
 
 # Define a detailed base prompt
 BASE_PROMPT = """
@@ -154,32 +161,22 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 **YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 """
 
-# Function to generate a response
+# Generate a response
 def generate_response(user_input):
-    # Combine the base prompt with the user's input
-    prompt = BASE_PROMPT + "\nUser: " + user_input
+    prompt = "FDIA Detection System Chatbot:\nUser: " + user_input
     try:
-        # Generate content using the Gemini model
         response = model.generate_content(prompt, stream=True)
         return "".join(res.text for res in response)
-    except Exception as e:
-        # Fallback response in case of an error
+    except Exception:
         return "I'm sorry, I couldn't process your request. Please try again later."
 
 # Handle send button click
 def handle_send():
-    user_text = st.session_state["input_text"]  # Get text from input widget
+    user_text = st.session_state["input_text"]
     if user_text.strip():
-        # Add user message to chat history
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
-
-        # Generate AI response
         ai_response = generate_response(user_text)
-
-        # Add AI response to chat history
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
-
-        # Clear input text
         st.session_state["input_text"] = ""
     else:
         st.warning("Input cannot be empty. Please type something!")
@@ -189,82 +186,100 @@ def handle_clear():
     st.session_state["chat_history"] = []
     st.session_state["input_text"] = ""
 
-# CSS (Copied from Project 1)
-st.markdown(
-    """
+# Dashboard Embed Code (Perbaikan ukuran)
+dashboard_html = f"""
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    
     <style>
-    html, body, .stApp {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
-        overflow: hidden; /* Remove scrollbars */
-    }
-    .stTextInput div[data-testid="stMarkdownContainer"] {
-        display: none;
-    }
-    .shortcut-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-        margin: 20px 0;
-        background-color: #f0f0f0;
-        color: black;
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: bold;
-        border-radius: 8px;
-        width: fit-content;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .shortcut-button:hover {
-        background-color: #007BFF;
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    }
-    .shortcut-button img {
-        margin-right: 10px;
-        width: 24px;
-        height: 24px;
-    }
-    .centered-title {
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .centered-subtitle {
-        text-align: center;
-        margin-top: 5px;
-    }
-    .chat-message {
-        margin: 10px 0;
-        padding: 10px;
-        border-radius: 5px;
-        max-width: 80%;
-        font-family: Arial, sans-serif;
-    }
-    .user-message {
-        text-align: right;
-        margin-left: auto;
-    }
-    .ai-message {
-        text-align: left;
-        margin-right: auto;
-    }
-    .stButton > button {
-        width: 100%;
-    }
+        body, html {{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }}
+        #superset-container {{
+            width: 100vw; 
+            height: 85vh; 
+            position: relative;
+        }}
+        iframe {{
+            width: 100%;
+            height: 100%;
+            border: none;
+        }}
     </style>
-    """,
-    unsafe_allow_html=True
-)
 
-# MAIN
-st.markdown('<h1 class="centered-title">Sigma Boys - Spark</h1>', unsafe_allow_html=True)
-st.markdown('<h1 class="centered-title">Sigma AI</h1>', unsafe_allow_html=True)
-st.markdown('<h3 class="centered-subtitle">Detection and Mitigation System for FDIA in IIoT</h3>', unsafe_allow_html=True)
+    <div id="superset-container"></div>
+
+    <script>
+        window.onload = async function() {{
+            const supersetUrl = "{SUP_URL}"; 
+            const supersetApiUrl = supersetUrl + "/api/v1/security";
+            const dashboardId = "{DASHBOARD_ID}";
+
+            try {{
+                console.log("🔍 Authenticating...");
+
+                let access_token = localStorage.getItem("superset_token");
+                if (!access_token) {{
+                    const login_body = {{
+                        "username": "{USERNAME}",
+                        "password": "{PASSWORD}",
+                        "provider": "db",
+                        "refresh": true
+                    }};
+                    const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
+                    const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
+                    access_token = loginResponse.data["access_token"];
+                    localStorage.setItem("superset_token", access_token);
+                }}
+
+                console.log("✅ Access Token received.");
+
+                const guest_token_body = {{
+                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
+                    "rls": [],
+                    "user": {{
+                        "username": "report-viewer",
+                        "first_name": "report-viewer",
+                        "last_name": "report-viewer"
+                    }}
+                }};
+
+                const guest_token_headers = {{
+                    headers: {{
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + access_token
+                    }}
+                }};
+
+                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
+                const guest_token = guestResponse.data["token"];
+
+                console.log("✅ Guest Token received.");
+
+                supersetEmbeddedSdk.embedDashboard({{
+                    id: dashboardId,
+                    supersetDomain: supersetUrl,
+                    mountPoint: document.getElementById("superset-container"),
+                    fetchGuestToken: async () => guest_token,
+                    dashboardUiConfig: {{ hideTitle: false }}
+                }});
+            }} catch (error) {{
+                console.error("❌ Dashboard error:", error);
+                alert("⚠️ Failed to load dashboard.");
+            }}
+        }};
+    </script>
+"""
+
+# Main Page Layout
+st.title("Sigma AI - FDIA Detection & Mitigation System")
+
+# Display Dashboard (Full Width)
+st.subheader("📊 Sigma Dashboard")
+components.html(dashboard_html, height=700)
 
 # Shortcut to Chatbot
 st.markdown(
@@ -277,19 +292,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Dashboard section
-st.markdown("### Dashboard")
-st.components.v1.html(
-    """
-    <iframe src="https://bliv.ai/embed/dashboard" 
-            style="width:100%; height:500px; border:none;"></iframe>
-    """,
-    height=500,
-)
-
-# Chat section
-st.markdown('<h2 id="chatbot">Chatbot - Sigma Boys</h2>', unsafe_allow_html=True)
-st.markdown('<h2 id="chatbot">Chatbot - Sigma AI</h2>', unsafe_allow_html=True)
+# Display Chatbot Below
+st.subheader("💬 Sigma Chatbot")
 
 # Link to return to Dashboard
 st.markdown(
@@ -303,35 +307,18 @@ st.markdown(
 )
 
 chat_container = st.container()
-
 with chat_container:
     for chat in st.session_state["chat_history"]:
         if chat["role"] == "user":
-            st.markdown(
-                f"""
-                <div class="chat-message user-message">{chat["content"]}</div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"<div style='text-align:right;'><b>User:</b> {chat['content']}</div>", unsafe_allow_html=True)
         else:
-            st.markdown(
-                f"""
-                <div class="chat-message ai-message">{chat["content"]}</div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"<div style='text-align:left;'><b>Sigma AI:</b> {chat['content']}</div>", unsafe_allow_html=True)
 
-# Input and action buttons
-input_container = st.container()
-with input_container:
-    with st.form("chat_form", clear_on_submit=True):
-        st.text_input(
-            label="",
-            placeholder="Type your message",
-            key="input_text"
-        )
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            st.form_submit_button("Send", on_click=handle_send)
-        with col2:
-            st.form_submit_button("Clear", on_click=handle_clear)
+# Chat Input (Centered)
+with st.form("chat_form", clear_on_submit=True):
+    st.text_input(label="", placeholder="Type your message...", key="input_text")
+    col_btn1, col_btn2 = st.columns([1, 1])
+    with col_btn1:
+        st.form_submit_button("Send", on_click=handle_send)
+    with col_btn2:
+        st.form_submit_button("Clear", on_click=handle_clear)
