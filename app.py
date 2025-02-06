@@ -69,6 +69,7 @@ def get_dashboard_data():
 
 # Define a detailed base prompt
 BASE_PROMPT = """
+menjawab dashboard dari link ini: https://dashboard.pulse.bliv.id/bliv/dashboard/sigma-dashboard/
 {json.dumps(dashboard_data, indent=2)}
 📌 **Nama Chatbot**: Sigma AI  
 📌 **Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**.  
