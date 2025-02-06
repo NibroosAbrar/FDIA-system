@@ -229,8 +229,8 @@ st.markdown(
     html, body, .stApp {
         margin: 0;
         padding: 0;
-        height: 100%;
-        width: 100%;
+        height: 200vh;
+        width: 100vw;
         overflow: hidden; /* Remove scrollbars */
     }
     .stTextInput div[data-testid="stMarkdownContainer"] {
@@ -303,8 +303,8 @@ dashboard_html = f"""
         body, html {{
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 200vh;
         }}
         #superset-container {{
             width: 100vw; 
