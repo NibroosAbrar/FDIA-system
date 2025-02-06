@@ -372,7 +372,7 @@ dashboard_html = f"""
                     supersetDomain: supersetUrl,
                     mountPoint: document.getElementById("superset-container"),
                     fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {hideTitle: true, hideFilters: true, filters: {expanded: true}}
+                    dashboardUiConfig: {hideTitle: true, hideFilters: true}
                 }});
             }} catch (error) {{
                 console.error("❌ Dashboard error:", error);
