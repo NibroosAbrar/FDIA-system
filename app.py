@@ -46,6 +46,28 @@ DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
 USERNAME = "pulse"
 PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
 
+# Login ke Superset API
+LOGIN_URL = f"{SUP_URL}/api/v1/security/login"
+login_data = {
+    "username": USERNAME,
+    "password": PASSWORD,
+    "provider": "db",
+    "refresh": True
+}
+
+try:
+    login_response = requests.post(LOGIN_URL, json=login_data)
+    login_response.raise_for_status()
+    access_token = login_response.json().get("access_token")
+
+    print("✅ Token berhasil diperoleh:", access_token)
+
+    # Simpan token ke session_state agar bisa digunakan
+    st.session_state["superset_token"] = access_token
+
+except requests.exceptions.RequestException as e:
+    print(f"❌ Error saat login: {e}")
+
 # Dashboard Embed Code (Perbaikan ukuran)
 dashboard_html = f"""
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -184,7 +206,10 @@ def get_dashboard_data():
     }
 
     API_URL = f"{SUP_URL}/api/v1/chart/data"
-    data_request = {"dashboard_id": DASHBOARD_ID}
+    data_request = {
+    "dashboard_id": DASHBOARD_ID,
+    "force": True  # Superset membutuhkan parameter ini untuk mengambil data terbaru
+    }
 
     try:
         response = requests.post(API_URL, headers=headers, json=data_request, verify=False)
