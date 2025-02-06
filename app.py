@@ -186,6 +186,78 @@ def handle_clear():
     st.session_state["chat_history"] = []
     st.session_state["input_text"] = ""
 
+# CSS (Copied from Project 1)
+st.markdown(
+    """
+    <style>
+    html, body, .stApp {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden; /* Remove scrollbars */
+    }
+    .stTextInput div[data-testid="stMarkdownContainer"] {
+        display: none;
+    }
+    .shortcut-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        margin: 20px 0;
+        background-color: #f0f0f0;
+        color: black;
+        text-decoration: none;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+        width: fit-content;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .shortcut-button:hover {
+        background-color: #007BFF;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+    .shortcut-button img {
+        margin-right: 10px;
+        width: 24px;
+        height: 24px;
+    }
+    .centered-title {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .centered-subtitle {
+        text-align: center;
+        margin-top: 5px;
+    }
+    .chat-message {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 5px;
+        max-width: 80%;
+        font-family: Arial, sans-serif;
+    }
+    .user-message {
+        text-align: right;
+        margin-left: auto;
+    }
+    .ai-message {
+        text-align: left;
+        margin-right: auto;
+    }
+    .stButton > button {
+        width: 100%;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Dashboard Embed Code (Perbaikan ukuran)
 dashboard_html = f"""
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -273,13 +345,26 @@ dashboard_html = f"""
         }};
     </script>
 """
+# MAIN
+st.markdown('<h1 class="centered-title">Sigma Boys - Spark</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="centered-title">Sigma AI</h1>', unsafe_allow_html=True)
+st.markdown('<h3 class="centered-subtitle">Detection and Mitigation System for FDIA in IIoT</h3>', unsafe_allow_html=True)
 
-# Main Page Layout
-st.title("Sigma AI - FDIA Detection & Mitigation System")
+# Shortcut to Chatbot
+st.markdown(
+    """
+    <a href="#chatbot-sigma-boys" class="shortcut-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/2593/2593635.png" alt="Bot Logo">
+        Go to Chatbot
+    </a>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # Display Dashboard (Full Width)
-st.subheader("📊 Sigma Dashboard")
 components.html(dashboard_html, height=700)
+
 
 # Display Chatbot Below
 st.subheader("💬 Sigma Chatbot")
