@@ -281,9 +281,9 @@ st.title("Sigma AI - FDIA Detection & Mitigation System")
 st.subheader("📊 Sigma Dashboard")
 components.html(dashboard_html, height=700)
 
-# Button to Go to Chatbot (Under Sigma Dashboard)
+# Button to Go to Chatbot (Under Sigma Dashboard, Above Dashboard)
 st.markdown("""
-    <div style="text-align:center; margin-top:20px;">
+    <div style="text-align:left; margin-top:10px; margin-bottom:10px;">
         <a href="#13ef106a" style="text-decoration:none; background-color:#0078D7; color:white; padding:10px 20px; border-radius:5px; font-size:16px;">Go to Chatbot</a>
     </div>
 """, unsafe_allow_html=True)
