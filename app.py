@@ -6,6 +6,7 @@ from vertexai.preview.generative_models import GenerativeModel
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
 import requests
+from flask import Flask, request, jsonify
 
 # Load environment variables
 load_dotenv()
@@ -192,7 +193,25 @@ def get_dashboard_data():
     except requests.exceptions.RequestException as e:
         print("❌ Error saat mengambil data dashboard:", str(e))  # DEBUGGING
         return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
+        
+# Buat Flask app di dalam Streamlit
+app = Flask(__name__)
 
+@app.route("/store_token", methods=["POST"])
+def store_token():
+    """Menerima token dari JavaScript dan menyimpannya ke session_state Streamlit."""
+    data = request.get_json()
+
+    # Debugging untuk melihat data yang diterima
+    print("🔍 Data token diterima:", data)
+
+    if not data or "token" not in data:
+        return jsonify({"error": "Token missing"}), 400
+
+    st.session_state["superset_token"] = data["token"]
+    print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
+
+    return jsonify({"message": "Token stored successfully"}), 200
         
 # Define a detailed base prompt
 BASE_PROMPT = """
