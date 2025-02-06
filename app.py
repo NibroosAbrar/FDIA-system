@@ -309,24 +309,31 @@ st.markdown(
 st.markdown("### Dashboard")
 # Create a placeholder div container
 st.markdown('<div id="superset-container"></div>', unsafe_allow_html=True)
-
 st.components.v1.html(
     f"""
-    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {{
-            supersetEmbeddedSdk.embedDashboard({{
-                id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
-                supersetDomain: "https://dashboard.pulse.bliv.id",
-                mountPoint: document.getElementById("superset-container"),
-                fetchGuestToken: () => fetchGuestTokenFromBackend(),
-                iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
-            }});
-        }});
-    </script>
+    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/p/dDlM5yqMY4g/?sdk_id=20c73015-80ec-4d3b-b40c-260e4cea7349"
+            style="width:100%; height:600px; border:none;"></iframe>
     """,
-    height=700,
+    height=600,
 )
+
+# st.components.v1.html(
+#     f"""
+#     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+#     <script>
+#         document.addEventListener("DOMContentLoaded", function() {{
+#             supersetEmbeddedSdk.embedDashboard({{
+#                 id: "883359f9-6bf3-468e-9d70-e391dcfa3542",
+#                 supersetDomain: "https://dashboard.pulse.bliv.id",
+#                 mountPoint: document.getElementById("superset-container"),
+#                 fetchGuestToken: () => fetchGuestTokenFromBackend(),
+#                 iframeSandboxExtras: ['allow-top-navigation', 'allow-popups-to-escape-sandbox'] 
+#             }});
+#         }});
+#     </script>
+#     """,
+#     height=700,
+# )
 
 
 
