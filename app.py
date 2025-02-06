@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import requests
 from flask import Flask, request, jsonify
 import urllib3
-from bs4 import BeautifulSoup
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables
