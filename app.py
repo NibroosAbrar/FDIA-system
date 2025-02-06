@@ -44,14 +44,12 @@ PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
 
 def get_dashboard_data():
     """Mengambil data dari dashboard Superset melalui API."""
-    SUP_URL = "https://dashboard.pulse.bliv.id"
     API_URL = f"{SUP_URL}/api/v1/chart/data"
-    DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
-    
-    # Ambil token dari session state
+
+    # Ambil token dari session state yang dikirim dari JavaScript
     token = st.session_state.get("superset_token")
     if not token:
-        return {"error": "Token tidak ditemukan. Silakan login terlebih dahulu."}
+        return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -65,7 +63,7 @@ def get_dashboard_data():
         response.raise_for_status()
         return response.json()  # Kembalikan data dashboard sebagai dictionary
     except requests.exceptions.RequestException as e:
-        return {"error": f"Error saat mengambil data dashboard: {str(e)}"}
+        return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
 
 # Define a detailed base prompt
 BASE_PROMPT = """
