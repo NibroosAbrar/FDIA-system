@@ -308,7 +308,7 @@ dashboard_html = f"""
         }}
         #superset-container {{
             width: 100vw; 
-            height: 100vh; 
+            height: 200vh; 
             position: relative;
         }}
         iframe {{
