@@ -77,16 +77,7 @@ dashboard_html = f"""
             try {{
                 console.log("🔍 Authenticating...");
 
-                    let access_token = localStorage.getItem("superset_token");
-
-                    console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
-
-                    if (access_token) {
-                        console.log("📡 Mengirim token ke Streamlit...");
-                        window.parent.postMessage({ type: "TOKEN_UPDATE", token: access_token }, "*");
-                    } else {
-                        console.error("❌ Token tidak ditemukan di localStorage!");
-                    }
+                let access_token = localStorage.getItem("superset_token");
 
                 if (!access_token) {{
                     console.log("⚠️ Token tidak ditemukan. Melakukan login...");
@@ -108,14 +99,17 @@ dashboard_html = f"""
                 console.log("✅ Access Token received:", access_token);
 
                 // Kirim token ke backend Streamlit
-                await fetch("/store_token", {{
-                    method: "POST",
-                    headers: {{ "Content-Type": "application/json" }},
-                    body: JSON.stringify({{ "token": access_token }})
-                }})
-                .then(response => response.json())
-                .then(data => console.log("✅ Token berhasil dikirim ke backend:", data))
-                .catch(error => console.error("❌ Error mengirim token ke backend:", error));
+                if (access_token) {{
+                    console.log("📡 Mengirim token ke Streamlit...");
+                    fetch("/store_token", {{
+                        method: "POST",
+                        headers: {{ "Content-Type": "application/json" }},
+                        body: JSON.stringify({{ "token": access_token }})
+                    }})
+                    .then(response => response.json())
+                    .then(data => console.log("✅ Token berhasil dikirim ke backend:", data))
+                    .catch(error => console.error("❌ Error mengirim token ke backend:", error));
+                }}
 
                 const guest_token_body = {{
                     "resources": [{{ "type": "dashboard", "id": dashboardId }}],
@@ -160,7 +154,10 @@ dashboard_html = f"""
     </script>
 """
 
+
 # Fungsi untuk menerima token dari JavaScript
+import time
+
 def get_dashboard_data():
     """Mengambil data dari dashboard Superset melalui API."""
     API_URL = f"{SUP_URL}/api/v1/chart/data"
@@ -195,6 +192,7 @@ def get_dashboard_data():
     except requests.exceptions.RequestException as e:
         print("❌ Error saat mengambil data dashboard:", str(e))  # DEBUGGING
         return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
+
         
 # Define a detailed base prompt
 BASE_PROMPT = """
