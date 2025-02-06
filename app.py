@@ -376,14 +376,14 @@ def handle_send():
     """
     user_text = st.session_state["input_text"]
     if user_text.strip():
-        # Ambil data dari dashboard Superset sebelum chatbot menjawab
-        dashboard_data = get_dashboard_data()
+        # # Ambil data dari dashboard Superset sebelum chatbot menjawab
+        # dashboard_data = get_dashboard_data()
         
-        # Gunakan data dashboard dalam jawaban chatbot
-        ai_response = generate_response(user_text, get_dashboard_data)
+        # # Gunakan data dashboard dalam jawaban chatbot
+        # ai_response = generate_response(user_text, get_dashboard_data)
         
+        # st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
-        st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
         
         st.session_state["input_text"] = ""
     else:
