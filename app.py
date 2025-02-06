@@ -41,6 +41,15 @@ SUP_URL = "https://dashboard.pulse.bliv.id"
 DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
 USERNAME = "pulse"
 PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
+# Fungsi untuk menerima token dari JavaScript
+def receive_token():
+    query_params = st.experimental_get_query_params()
+    if "token" in query_params:
+        st.session_state["superset_token"] = query_params["token"][0]
+        print("✅ Token berhasil disimpan:", st.session_state["superset_token"])  # DEBUGGING
+
+# Panggil fungsi saat halaman dimuat
+receive_token()
 
 def get_dashboard_data():
     """Mengambil data dari dashboard Superset melalui API."""
