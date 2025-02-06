@@ -354,7 +354,7 @@ st.subheader("📊 Sigma Dashboard")
 # Shortcut to Chatbot
 st.markdown(
     """
-    <a href="#chatbot-sigma-boys" class="shortcut-button">
+    <a href="#13ef106a" class="shortcut-button">
         <img src="https://cdn-icons-png.flaticon.com/512/2593/2593635.png" alt="Bot Logo">
         Go to Chatbot
     </a>
@@ -367,6 +367,18 @@ components.html(dashboard_html, height=700)
 
 # Display Chatbot Below
 st.subheader("💬 Sigma Chatbot")
+
+# Button to Go to Dashboard (Under Sigma Chatbot)
+st.markdown(
+    """
+    <a href="#8588f86d" class="shortcut-button">
+        <img src="https://cdn-icons-png.flaticon.com/512/6821/6821002.png" alt="Dashboard Logo">
+        Go to Dashboard
+    </a>
+    """,
+    unsafe_allow_html=True
+)
+
 chat_container = st.container()
 
 with chat_container:
@@ -385,14 +397,4 @@ with st.form("chat_form", clear_on_submit=True):
     with col_btn2:
         st.form_submit_button("Clear", on_click=handle_clear)
 
-# Button to Go to Dashboard (Under Sigma Chatbot)
-st.markdown(
-    """
-    <a href="#dashboard" class="shortcut-button">
-        <img src="https://cdn-icons-png.flaticon.com/512/6821/6821002.png" alt="Dashboard Logo">
-        Go to Dashboard
-    </a>
-    """,
-    unsafe_allow_html=True
-)
 
