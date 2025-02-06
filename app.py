@@ -184,11 +184,11 @@ def get_dashboard_data():
         "Content-Type": "application/json"
     }
 
-    API_URL = f"{SUP_URL}/api/v1/security"
+    # API_URL = f"{SUP_URL}/api/v1/security"
     data_request = {"dashboard_id": DASHBOARD_ID}
 
     try:
-        response = requests.post(API_URL, headers=headers, json=data_request, verify=False)
+        response = requests.post(headers=headers, json=data_request, verify=False)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
