@@ -305,93 +305,112 @@ st.markdown(
 
 # Dashboard Embed Code (Perbaikan ukuran)
 dashboard_html = f"""
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-    
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }}
-        #superset-container {{
-            width: 100vw; 
-            height: 100vh; 
-            position: relative;
-        }}
-        iframe {{
-            width: 100%;
-            height: 100%;
-            border: none;
-        }}
-    </style>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
 
-    <div id="superset-container"></div>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
+    #superset-container {
+        width: 100vw; 
+        height: 100vh; 
+        position: relative;
+    }
+    iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+</style>
 
-    <script>
-        window.onload = async function() {{
-            const supersetUrl = "{SUP_URL}"; 
-            const supersetApiUrl = supersetUrl + "/api/v1/security";
-            const dashboardId = "{DASHBOARD_ID}";
+<div id="superset-container"></div>
 
-            try {{
-                console.log("🔍 Authenticating...");
+<script>
+    async function authenticateAndEmbedDashboard() {
+        const supersetUrl = "{SUP_URL}"; 
+        const supersetApiUrl = supersetUrl + "/api/v1/security";
+        const dashboardId = "{DASHBOARD_ID}";
 
-                let access_token = localStorage.getItem("superset_token");
-                if (!access_token) {{
-                    const login_body = {{
-                        "username": "{USERNAME}",
-                        "password": "{PASSWORD}",
-                        "provider": "db",
-                        "refresh": true
-                    }};
-                    const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
-                    const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
-                    access_token = loginResponse.data["access_token"];
-                    localStorage.setItem("superset_token", access_token);
-                }}
+        try {
+            console.log("🔍 Authenticating...");
 
-                console.log("✅ Access Token received.");
+            // Coba ambil token dari localStorage
+            let access_token = localStorage.getItem("superset_token");
 
-                const guest_token_body = {{
-                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
-                    "rls": [],
-                    "user": {{
-                        "username": "report-viewer",
-                        "first_name": "report-viewer",
-                        "last_name": "report-viewer"
-                    }}
-                }};
+            if (!access_token) {
+                console.log("⚠️ Token tidak ditemukan. Melakukan login...");
 
-                const guest_token_headers = {{
-                    headers: {{
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + access_token
-                    }}
-                }};
+                const login_body = {
+                    "username": "{USERNAME}",
+                    "password": "{PASSWORD}",
+                    "provider": "db",
+                    "refresh": true
+                };
 
-                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
-                const guest_token = guestResponse.data["token"];
+                const login_headers = { headers: { "Content-Type": "application/json" } };
+                const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
 
-                console.log("✅ Guest Token received.");
+                access_token = loginResponse.data["access_token"];
+                localStorage.setItem("superset_token", access_token);
+            }
 
-                supersetEmbeddedSdk.embedDashboard({{
-                    id: dashboardId,
-                    supersetDomain: supersetUrl,
-                    mountPoint: document.getElementById("superset-container"),
-                    fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {{
-                        hideTitle: true,
-                        filters: {{ expanded: false, visible: true }}  // Menyembunyikan filter
-                    }}
-                }});
-            }} catch (error) {{
-                console.error("❌ Dashboard error:", error);
-                alert("⚠️ Failed to load dashboard.");
-            }}
-        }};
-    </script>
+            console.log("✅ Access Token received.");
+
+            // Kirim token ke backend Streamlit
+            fetch("/store_token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ "token": access_token })
+            }).then(response => response.json())
+              .then(data => console.log("✅ Token berhasil dikirim ke backend:", data))
+              .catch(error => console.error("❌ Error mengirim token ke backend:", error));
+
+            // Buat Guest Token untuk Superset
+            const guest_token_body = {
+                "resources": [{ "type": "dashboard", "id": dashboardId }],
+                "rls": [],
+                "user": {
+                    "username": "report-viewer",
+                    "first_name": "report-viewer",
+                    "last_name": "report-viewer"
+                }
+            };
+
+            const guest_token_headers = {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + access_token
+                }
+            };
+
+            const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
+            const guest_token = guestResponse.data["token"];
+
+            console.log("✅ Guest Token received.");
+
+            supersetEmbeddedSdk.embedDashboard({
+                id: dashboardId,
+                supersetDomain: supersetUrl,
+                mountPoint: document.getElementById("superset-container"),
+                fetchGuestToken: async () => guest_token,
+                dashboardUiConfig: {
+                    hideTitle: true,
+                    filters: { expanded: false, visible: true }
+                }
+            });
+
+        } catch (error) {
+            console.error("❌ Dashboard error:", error);
+            alert("⚠️ Failed to load dashboard.");
+        }
+    }
+
+    window.onload = authenticateAndEmbedDashboard;
+</script>
 """
 # MAIN
 st.markdown(
