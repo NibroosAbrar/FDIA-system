@@ -189,7 +189,7 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 """
 
 # Generate a response
-def generate_response(user_input, dashboard_data):
+def generate_response(user_input, get_dashboard_data):
     prompt = "FDIA Detection System Chatbot:\nUser: " + user_input
     try:
         response = model.generate_content(prompt, stream=True)
@@ -208,7 +208,7 @@ def handle_send():
         dashboard_data = get_dashboard_data()
         
         # Gunakan data dashboard dalam jawaban chatbot
-        ai_response = generate_response(user_text, dashboard_data)
+        ai_response = generate_response(user_text, get_dashboard_data)
         
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
