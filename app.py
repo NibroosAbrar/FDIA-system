@@ -320,7 +320,9 @@ st.components.v1.html(f"""
 
         async function getToken() {{
             try {{
-                // Login to get access token
+                console.log("🔍 Starting authentication process...");
+
+                // STEP 1: Login ke API untuk mendapatkan access token
                 const login_body = {{
                     "username": "nibroos",
                     "password": "Abroor@kun0811",
@@ -332,12 +334,17 @@ st.components.v1.html(f"""
                     headers: {{ "Content-Type": "application/json" }}
                 }};
 
-                console.log("Requesting login token from:", supersetApiUrl + "/login");
-                const {{ data }} = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
-                const access_token = data["access_token"];
-                console.log("Access Token:", access_token);
+                console.log("🛠️ Requesting login token from:", supersetApiUrl + "/login");
+                const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
+                
+                if (loginResponse.status !== 200) {{
+                    throw new Error(`❌ Login failed: ${loginResponse.status} - ${loginResponse.statusText}`);
+                }}
 
-                // Request guest token for embedding
+                const access_token = loginResponse.data["access_token"];
+                console.log("✅ Access Token:", access_token);
+
+                // STEP 2: Request Guest Token
                 const guest_token_body = JSON.stringify({{
                     "resources": [{{ "type": "dashboard", "id": dashboardId }}],
                     "rls": [],
@@ -355,12 +362,17 @@ st.components.v1.html(f"""
                     }}
                 }};
 
-                console.log("Requesting guest token from:", supersetApiUrl + "/guest_token/");
+                console.log("🛠️ Requesting guest token from:", supersetApiUrl + "/guest_token/");
                 const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
-                const guest_token = guestResponse.data["token"];
-                console.log("Guest Token:", guest_token);
 
-                // Embed Dashboard
+                if (guestResponse.status !== 200) {{
+                    throw new Error(`❌ Guest Token request failed: ${guestResponse.status} - ${guestResponse.statusText}`);
+                }}
+
+                const guest_token = guestResponse.data["token"];
+                console.log("✅ Guest Token:", guest_token);
+
+                // STEP 3: Embed Dashboard
                 supersetEmbeddedSdk.embedDashboard({{
                     id: dashboardId,
                     supersetDomain: supersetUrl,
@@ -370,7 +382,8 @@ st.components.v1.html(f"""
                 }});
 
             }} catch (error) {{
-                console.error("Error in embedding Superset dashboard:", error);
+                console.error("❌ Error in embedding Superset dashboard:", error);
+                alert("⚠️ Failed to embed dashboard. Check console logs for details.");
             }}
         }}
 
