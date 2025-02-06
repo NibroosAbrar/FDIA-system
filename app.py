@@ -6,7 +6,6 @@ from vertexai.preview.generative_models import GenerativeModel
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
 import requests
-from flask import Flask, request, jsonify
 
 # Load environment variables
 load_dotenv()
@@ -43,193 +42,31 @@ DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
 USERNAME = "pulse"
 PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
 
-# Dashboard Embed Code (Perbaikan ukuran)
-dashboard_html = f"""
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }}
-        #superset-container {{
-            width: 100vw; 
-            height: 100vh; 
-            position: relative;
-        }}
-        iframe {{
-            width: 100%;
-            height: 100%;
-            border: none;
-        }}
-    </style>
-
-    <div id="superset-container"></div>
-
-    <script>
-        const supersetUrl = "{SUP_URL}";
-        const supersetApiUrl = supersetUrl + "/api/v1/security";
-        const dashboardId = "{DASHBOARD_ID}";
-
-        async function authenticateAndEmbedDashboard() {{
-            try {{
-                console.log("🔍 Authenticating...");
-
-                let access_token = localStorage.getItem("superset_token");
-
-                if (!access_token) {{
-                    console.log("⚠️ Token tidak ditemukan. Melakukan login...");
-
-                    const login_body = {{
-                        "username": "{USERNAME}",
-                        "password": "{PASSWORD}",
-                        "provider": "db",
-                        "refresh": true
-                    }};
-
-                    const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
-                    const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
-
-                    access_token = loginResponse.data["access_token"];
-                    localStorage.setItem("superset_token", access_token);
-                }}
-
-                console.log("✅ Access Token received:", access_token);
-
-                // Kirim token ke backend Streamlit
-                if (access_token) {{
-                    console.log("📡 Mengirim token ke Streamlit...");
-                    fetch("/store_token", {{
-                        method: "POST",
-                        headers: {{ "Content-Type": "application/json" }},
-                        body: JSON.stringify({{ "token": access_token }})
-                    }})
-                    .then(response => response.json())
-                    .then(data => console.log("✅ Token berhasil dikirim ke backend:", data))
-                    .catch(error => console.error("❌ Error mengirim token ke backend:", error));
-                }}
-
-                const guest_token_body = {{
-                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
-                    "rls": [],
-                    "user": {{
-                        "username": "report-viewer",
-                        "first_name": "report-viewer",
-                        "last_name": "report-viewer"
-                    }}
-                }};
-
-                const guest_token_headers = {{
-                    headers: {{
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + access_token
-                    }}
-                }};
-
-                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
-                const guest_token = guestResponse.data["token"];
-
-                console.log("✅ Guest Token received.");
-
-                supersetEmbeddedSdk.embedDashboard({{
-                    id: dashboardId,
-                    supersetDomain: supersetUrl,
-                    mountPoint: document.getElementById("superset-container"),
-                    fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {{
-                        hideTitle: true,
-                        filters: {{ expanded: false, visible: true }}
-                    }}
-                }});
-
-            }} catch (error) {{
-                console.error("❌ Dashboard error:", error);
-                alert("⚠️ Failed to load dashboard.");
-            }}
-        }}
-
-        window.onload = authenticateAndEmbedDashboard;
-    </script>
-"""
-
-
-# def get_dashboard_data():
-#     """Menyertakan dashboard HTML dan mengambil token dari localStorage."""
+def get_dashboard_data():
+    """Mengambil data dari dashboard Superset melalui API."""
+    SUP_URL = "https://dashboard.pulse.bliv.id"
+    API_URL = f"{SUP_URL}/api/v1/chart/data"
+    DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
     
-#     dashboard_html = f"""
-#         <script>
-#             let access_token = localStorage.getItem("superset_token");
+    # Ambil token dari session state
+    token = st.session_state.get("superset_token")
+    if not token:
+        return {"error": "Token tidak ditemukan. Silakan login terlebih dahulu."}
 
-#             console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
-#             if (access_token) {{
-#                 console.log("📡 Mengirim token ke Streamlit...");
-#                 fetch("/store_token", {{
-#                     method: "POST",
-#                     headers: {{ "Content-Type": "application/json" }},
-#                     body: JSON.stringify({{ "token": access_token }})
-#                 }})
-#                 .then(response => response.json())
-#                 .then(data => {{
-#                     console.log("✅ Token berhasil dikirim ke backend:", data);
-#                     window.location.reload();  // Reload agar Streamlit bisa membaca token
-#                 }})
-#                 .catch(error => console.error("❌ Error mengirim token ke backend:", error));
-#             }} else {{
-#                 console.error("❌ Token tidak ditemukan di localStorage!");
-#             }}
-#         </script>
-#     """
-    
-#     # Tampilkan HTML di Streamlit
-#     st.components.v1.html(dashboard_html, height=10)
+    data_request = {"dashboard_id": DASHBOARD_ID}
 
-#     # Ambil token dari session state setelah dikirim oleh JavaScript
-#     token = st.session_state.get("superset_token")
-#     if not token:
-#         return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
+    try:
+        response = requests.post(API_URL, headers=headers, json=data_request)
+        response.raise_for_status()
+        return response.json()  # Kembalikan data dashboard sebagai dictionary
+    except requests.exceptions.RequestException as e:
+        return {"error": f"Error saat mengambil data dashboard: {str(e)}"}
 
-#     # Mengambil data dari Superset API menggunakan token
-#     SUP_URL = "https://dashboard.pulse.bliv.id"
-#     API_URL = f"{SUP_URL}/api/v1/chart/data"
-#     DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
-    
-#     headers = {
-#         "Authorization": f"Bearer {token}",
-#         "Content-Type": "application/json"
-#     }
-
-#     data_request = {"dashboard_id": DASHBOARD_ID}
-
-#     try:
-#         response = requests.post(API_URL, headers=headers, json=data_request)
-#         response.raise_for_status()
-#         return response.json()
-#     except requests.exceptions.RequestException as e:
-#         return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
-        
-# # Buat Flask app di dalam Streamlit
-# app = Flask(__name__)
-
-# @app.route("/store_token", methods=["POST"])
-# def store_token():
-#     """Menerima token dari JavaScript dan menyimpannya ke session_state Streamlit."""
-#     data = request.get_json()
-
-#     # Debugging untuk melihat data yang diterima
-#     print("🔍 Data token diterima:", data)
-
-#     if not data or "token" not in data:
-#         return jsonify({"error": "Token missing"}), 400
-
-#     st.session_state["superset_token"] = data["token"]
-#     print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
-
-#     return jsonify({"message": "Token stored successfully"}), 200
-        
 # Define a detailed base prompt
 BASE_PROMPT = """
 {json.dumps(dashboard_data, indent=2)}
@@ -352,16 +189,7 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 """
 
 # Generate a response
-def generate_response(user_input, dashboard_data):
-    #     # Ambil data dari dashboard sebelum chatbot menjawab
-    # dashboard_data = get_dashboard_data()
-
-    # # Jika terjadi error saat mengambil data, tampilkan error tersebut
-    # if "error" in dashboard_data:
-    #     return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
-
-    # Format data dashboard untuk digunakan dalam prompt
-    dashboard_context = json.dumps(dashboard_data, indent=2)
+def generate_response(user_input, get_dashboard_data):
     prompt = "FDIA Detection System Chatbot:\nUser: " + user_input
     try:
         response = model.generate_content(prompt, stream=True)
@@ -376,15 +204,14 @@ def handle_send():
     """
     user_text = st.session_state["input_text"]
     if user_text.strip():
-        # # Ambil data dari dashboard Superset sebelum chatbot menjawab
-        # dashboard_data = get_dashboard_data()
+        # Ambil data dari dashboard Superset sebelum chatbot menjawab
+        dashboard_data = get_dashboard_data()
         
-        # # Gunakan data dashboard dalam jawaban chatbot
-        # ai_response = generate_response(user_text, get_dashboard_data)
-        ai_response = generate_response(user_text)
+        # Gunakan data dashboard dalam jawaban chatbot
+        ai_response = generate_response(user_text, get_dashboard_data)
         
-        # st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
+        st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
         
         st.session_state["input_text"] = ""
     else:
@@ -467,6 +294,96 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Dashboard Embed Code (Perbaikan ukuran)
+dashboard_html = f"""
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    
+    <style>
+        body, html {{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }}
+        #superset-container {{
+            width: 100vw; 
+            height: 100vh; 
+            position: relative;
+        }}
+        iframe {{
+            width: 100%;
+            height: 100%;
+            border: none;
+        }}
+    </style>
+
+    <div id="superset-container"></div>
+
+    <script>
+        window.onload = async function() {{
+            const supersetUrl = "{SUP_URL}"; 
+            const supersetApiUrl = supersetUrl + "/api/v1/security";
+            const dashboardId = "{DASHBOARD_ID}";
+
+            try {{
+                console.log("🔍 Authenticating...");
+
+                let access_token = localStorage.getItem("superset_token");
+                if (!access_token) {{
+                    const login_body = {{
+                        "username": "{USERNAME}",
+                        "password": "{PASSWORD}",
+                        "provider": "db",
+                        "refresh": true
+                    }};
+                    const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
+                    const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
+                    access_token = loginResponse.data["access_token"];
+                    localStorage.setItem("superset_token", access_token);
+                }}
+
+                console.log("✅ Access Token received.");
+
+                const guest_token_body = {{
+                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
+                    "rls": [],
+                    "user": {{
+                        "username": "report-viewer",
+                        "first_name": "report-viewer",
+                        "last_name": "report-viewer"
+                    }}
+                }};
+
+                const guest_token_headers = {{
+                    headers: {{
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + access_token
+                    }}
+                }};
+
+                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
+                const guest_token = guestResponse.data["token"];
+
+                console.log("✅ Guest Token received.");
+
+                supersetEmbeddedSdk.embedDashboard({{
+                    id: dashboardId,
+                    supersetDomain: supersetUrl,
+                    mountPoint: document.getElementById("superset-container"),
+                    fetchGuestToken: async () => guest_token,
+                    dashboardUiConfig: {{
+                        hideTitle: true,
+                        filters: {{ expanded: false, visible: true }}  // Menyembunyikan filter
+                    }}
+                }});
+            }} catch (error) {{
+                console.error("❌ Dashboard error:", error);
+                alert("⚠️ Failed to load dashboard.");
+            }}
+        }};
+    </script>
+"""
 # MAIN
 st.markdown(
     """
@@ -523,5 +440,3 @@ with st.form("chat_form", clear_on_submit=True):
         st.form_submit_button("Send", on_click=handle_send)
     with col_btn2:
         st.form_submit_button("Clear", on_click=handle_clear)
-
-
