@@ -157,51 +157,19 @@ dashboard_html = f"""
 
 
 def get_dashboard_data():
-    """Menyertakan dashboard HTML dan mengambil token dari localStorage."""
+    """Mengambil data dari Superset API menggunakan token dari session state."""
     
-    dashboard_html = f"""
-        <script>
-            let access_token = localStorage.getItem("superset_token");
-
-            console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
-
-            if (access_token) {{
-                console.log("📡 Mengirim token ke Streamlit...");
-                fetch("/store_token", {{
-                    method: "POST",
-                    headers: {{ "Content-Type": "application/json" }},
-                    body: JSON.stringify({{ "token": access_token }})
-                }})
-                .then(response => response.json())
-                .then(data => {{
-                    console.log("✅ Token berhasil dikirim ke backend:", data);
-                    window.location.reload();  // Reload agar Streamlit bisa membaca token
-                }})
-                .catch(error => console.error("❌ Error mengirim token ke backend:", error));
-            }} else {{
-                console.error("❌ Token tidak ditemukan di localStorage!");
-            }}
-        </script>
-    """
-    
-    # Tampilkan HTML di Streamlit
-    st.components.v1.html(dashboard_html, height=10)
-
-    # Ambil token dari session state setelah dikirim oleh JavaScript
     token = st.session_state.get("superset_token")
-    if not token:
-        return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
-
-    # Mengambil data dari Superset API menggunakan token
-    SUP_URL = "https://dashboard.pulse.bliv.id"
-    API_URL = f"{SUP_URL}/api/v1/chart/data"
-    DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
     
+    if not token:
+        return {"error": "⚠️ Token belum tersedia. Silakan refresh halaman atau login ulang."}
+
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
+    API_URL = f"{SUP_URL}/api/v1/chart/data"
     data_request = {"dashboard_id": DASHBOARD_ID}
 
     try:
