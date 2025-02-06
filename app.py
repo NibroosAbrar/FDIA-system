@@ -13,6 +13,12 @@ st.set_page_config(layout="wide")
 project_id = os.getenv("project.id")
 project_region = os.getenv("region")
 
+# Dashboard Configuration
+SUP_URL = "https://dashboard.pulse.bliv.id"
+DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
+USERNAME = "pulse"
+PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
+
 # Tulis kredensial dari st.secrets ke file sementara
 with open("google_credentials.json", "w") as f:
     f.write(st.secrets["GOOGLE_APPLICATION_CREDENTIALS"])
@@ -314,37 +320,30 @@ st.components.v1.html(f"""
     <div id="superset-container"></div>
 
     <script>
-        const supersetUrl = "https://dashboard.pulse.bliv.id"; 
+        const supersetUrl = "{SUP_URL}"; 
         const supersetApiUrl = supersetUrl + "/api/v1/security";
-        const dashboardId = "883359f9-6bf3-468e-9d70-e391dcfa3542";
+        const dashboardId = "{DASHBOARD_ID}";
 
         async function getToken() {{
             try {{
-                console.log("🔍 Starting authentication process...");
+                console.log("🔍 Authenticating...");
 
-                // STEP 1: Login ke API untuk mendapatkan access token
                 const login_body = {{
-                    "username": "pulse",
-                    "password": "f6d72ad2-e454-11ef-9cd2-0242ac120002",
+                    "username": "{USERNAME}",
+                    "password": "{PASSWORD}",
                     "provider": "db",
                     "refresh": true
                 }};
-
-                const login_headers = {{
-                    headers: {{ "Content-Type": "application/json" }}
-                }};
-
-                console.log("🛠️ Requesting login token from:", supersetApiUrl + "/login");
+                const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
                 const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
-                
+
                 if (loginResponse.status !== 200) {{
                     throw new Error(`❌ Login failed: ${loginResponse.status} - ${loginResponse.statusText}`);
                 }}
 
                 const access_token = loginResponse.data["access_token"];
-                console.log("✅ Access Token:", access_token);
+                console.log("✅ Access Token received.");
 
-                // STEP 2: Request Guest Token
                 const guest_token_body = JSON.stringify({{
                     "resources": [{{ "type": "dashboard", "id": dashboardId }}],
                     "rls": [],
@@ -362,7 +361,6 @@ st.components.v1.html(f"""
                     }}
                 }};
 
-                console.log("🛠️ Requesting guest token from:", supersetApiUrl + "/guest_token/");
                 const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
 
                 if (guestResponse.status !== 200) {{
@@ -370,20 +368,19 @@ st.components.v1.html(f"""
                 }}
 
                 const guest_token = guestResponse.data["token"];
-                console.log("✅ Guest Token:", guest_token);
+                console.log("✅ Guest Token received.");
 
-                // STEP 3: Embed Dashboard
                 supersetEmbeddedSdk.embedDashboard({{
                     id: dashboardId,
                     supersetDomain: supersetUrl,
                     mountPoint: document.getElementById("superset-container"),
                     fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {{ hideTitle: true }}
+                    dashboardUiConfig: {{ hideTitle: false }}
                 }});
 
             }} catch (error) {{
-                console.error("❌ Error in embedding Superset dashboard:", error);
-                alert("⚠️ Failed to embed dashboard. Check console logs for details.");
+                console.error("❌ Dashboard error:", error);
+                alert("⚠️ Failed to load dashboard.");
             }}
         }}
 
