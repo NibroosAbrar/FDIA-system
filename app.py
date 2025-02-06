@@ -374,7 +374,7 @@ dashboard_html = f"""
                     fetchGuestToken: async () => guest_token,
                     dashboardUiConfig: {{
                         hideTitle: true,
-                        filters: {{ expanded: false, visible: false }}  // Menyembunyikan filter
+                        filters: {{ expanded: false, visible: true }}  // Menyembunyikan filter
                     }}
                 }});
             }} catch (error) {{
