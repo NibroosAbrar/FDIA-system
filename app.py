@@ -5,6 +5,7 @@ import vertexai
 from vertexai.preview.generative_models import GenerativeModel
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -41,8 +42,34 @@ DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
 USERNAME = "pulse"
 PASSWORD = "f6d72ad2-e454-11ef-9cd2-0242ac120002"
 
+def get_dashboard_data():
+    """Mengambil data dari dashboard Superset melalui API."""
+    SUP_URL = "https://dashboard.pulse.bliv.id"
+    API_URL = f"{SUP_URL}/api/v1/chart/data"
+    DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
+    
+    # Ambil token dari session state
+    token = st.session_state.get("superset_token")
+    if not token:
+        return {"error": "Token tidak ditemukan. Silakan login terlebih dahulu."}
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    data_request = {"dashboard_id": DASHBOARD_ID}
+
+    try:
+        response = requests.post(API_URL, headers=headers, json=data_request)
+        response.raise_for_status()
+        return response.json()  # Kembalikan data dashboard sebagai dictionary
+    except requests.exceptions.RequestException as e:
+        return {"error": f"Error saat mengambil data dashboard: {str(e)}"}
+
 # Define a detailed base prompt
 BASE_PROMPT = """
+{json.dumps(dashboard_data, indent=2)}
 📌 **Nama Chatbot**: Sigma AI  
 📌 **Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**.  
 📌 **Tugas Utama**:  
@@ -162,7 +189,7 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 """
 
 # Generate a response
-def generate_response(user_input):
+def generate_response(user_input, dashboard_data):
     prompt = "FDIA Detection System Chatbot:\nUser: " + user_input
     try:
         response = model.generate_content(prompt, stream=True)
@@ -172,14 +199,23 @@ def generate_response(user_input):
 
 # Handle send button click
 def handle_send():
+    """
+    Mengambil input dari pengguna, mengambil data dashboard, dan menghasilkan respons chatbot.
+    """
     user_text = st.session_state["input_text"]
     if user_text.strip():
+        # Ambil data dari dashboard Superset sebelum chatbot menjawab
+        dashboard_data = get_dashboard_data()
+        
+        # Gunakan data dashboard dalam jawaban chatbot
+        ai_response = generate_response(user_text, dashboard_data)
+        
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
-        ai_response = generate_response(user_text)
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
+        
         st.session_state["input_text"] = ""
     else:
-        st.warning("Input cannot be empty. Please type something!")
+        st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
 
 # Handle clear button click
 def handle_clear():
