@@ -46,10 +46,21 @@ def get_dashboard_data():
     """Mengambil data dari dashboard Superset melalui API."""
     API_URL = f"{SUP_URL}/api/v1/chart/data"
 
-    # Ambil token dari session state yang dikirim dari JavaScript
-    token = st.session_state.get("superset_token")
+    print("🔍 Memeriksa token di session_state...")  # DEBUGGING
+
+    for i in range(5):  # Loop untuk menunggu token
+        token = st.session_state.get("superset_token")
+        print(f"⏳ Coba ke-{i+1}: Token =", token)  # DEBUGGING
+
+        if token:
+            break
+        time.sleep(2)  # Tunggu 2 detik sebelum mencoba lagi
+
     if not token:
+        print("❌ Token tetap tidak tersedia setelah menunggu!")
         return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
+
+    print("✅ Token tersedia, mengambil data dashboard...")  # DEBUGGING
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -61,10 +72,11 @@ def get_dashboard_data():
     try:
         response = requests.post(API_URL, headers=headers, json=data_request)
         response.raise_for_status()
-        return response.json()  # Kembalikan data dashboard sebagai dictionary
+        return response.json()
     except requests.exceptions.RequestException as e:
+        print("❌ Error saat mengambil data dashboard:", str(e))  # DEBUGGING
         return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
-
+        
 # Define a detailed base prompt
 BASE_PROMPT = """
 {json.dumps(dashboard_data, indent=2)}
