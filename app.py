@@ -314,78 +314,10 @@ st.markdown(
 
 # Dashboard section
 st.markdown("### Dashboard")
-st.components.v1.html(f"""
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-    <div id="superset-container"></div>
-
-    <script>
-        const supersetUrl = "{SUP_URL}"; 
-        const supersetApiUrl = supersetUrl + "/api/v1/security";
-        const dashboardId = "{DASHBOARD_ID}";
-
-        async function getToken() {{
-            try {{
-                console.log("🔍 Authenticating...");
-
-                const login_body = {{
-                    "username": "{USERNAME}",
-                    "password": "{PASSWORD}",
-                    "provider": "db",
-                    "refresh": true
-                }};
-                const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
-                const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
-
-                if (loginResponse.status !== 200) {{
-                    throw new Error(`❌ Login failed: ${loginResponse.status} - ${loginResponse.statusText}`);
-                }}
-
-                const access_token = loginResponse.data["access_token"];
-                console.log("✅ Access Token received.");
-
-                const guest_token_body = JSON.stringify({{
-                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
-                    "rls": [],
-                    "user": {{
-                        "username": "report-viewer",
-                        "first_name": "report-viewer",
-                        "last_name": "report-viewer"
-                    }}
-                }});
-
-                const guest_token_headers = {{
-                    headers: {{
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + access_token
-                    }}
-                }};
-
-                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
-
-                if (guestResponse.status !== 200) {{
-                    throw new Error(`❌ Guest Token request failed: ${guestResponse.status} - ${guestResponse.statusText}`);
-                }}
-
-                const guest_token = guestResponse.data["token"];
-                console.log("✅ Guest Token received.");
-
-                supersetEmbeddedSdk.embedDashboard({{
-                    id: dashboardId,
-                    supersetDomain: supersetUrl,
-                    mountPoint: document.getElementById("superset-container"),
-                    fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {{ hideTitle: false }}
-                }});
-
-            }} catch (error) {{
-                console.error("❌ Dashboard error:", error);
-                alert("⚠️ Failed to load dashboard.");
-            }}
-        }}
-
-        getToken();
-    </script>
+st.components.v1.html(
+       f"""
+    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/p/dDlM5yqMY4g"
+            style="width:100%; height:600px; border:none;"></iframe>
 """, height=700)
 
 
