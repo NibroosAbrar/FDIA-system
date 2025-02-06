@@ -184,51 +184,51 @@ dashboard_html = f"""
 #         </script>
 #     """
     
-    # Tampilkan HTML di Streamlit
-    st.components.v1.html(dashboard_html, height=10)
+#     # Tampilkan HTML di Streamlit
+#     st.components.v1.html(dashboard_html, height=10)
 
-    # Ambil token dari session state setelah dikirim oleh JavaScript
-    token = st.session_state.get("superset_token")
-    if not token:
-        return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
+#     # Ambil token dari session state setelah dikirim oleh JavaScript
+#     token = st.session_state.get("superset_token")
+#     if not token:
+#         return {"error": "⚠️ Token belum tersedia. Silakan tunggu beberapa detik dan coba lagi."}
 
-    # Mengambil data dari Superset API menggunakan token
-    SUP_URL = "https://dashboard.pulse.bliv.id"
-    API_URL = f"{SUP_URL}/api/v1/chart/data"
-    DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
+#     # Mengambil data dari Superset API menggunakan token
+#     SUP_URL = "https://dashboard.pulse.bliv.id"
+#     API_URL = f"{SUP_URL}/api/v1/chart/data"
+#     DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
     
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+#     headers = {
+#         "Authorization": f"Bearer {token}",
+#         "Content-Type": "application/json"
+#     }
 
-    data_request = {"dashboard_id": DASHBOARD_ID}
+#     data_request = {"dashboard_id": DASHBOARD_ID}
 
-    try:
-        response = requests.post(API_URL, headers=headers, json=data_request)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
+#     try:
+#         response = requests.post(API_URL, headers=headers, json=data_request)
+#         response.raise_for_status()
+#         return response.json()
+#     except requests.exceptions.RequestException as e:
+#         return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
         
-# Buat Flask app di dalam Streamlit
-app = Flask(__name__)
+# # Buat Flask app di dalam Streamlit
+# app = Flask(__name__)
 
-@app.route("/store_token", methods=["POST"])
-def store_token():
-    """Menerima token dari JavaScript dan menyimpannya ke session_state Streamlit."""
-    data = request.get_json()
+# @app.route("/store_token", methods=["POST"])
+# def store_token():
+#     """Menerima token dari JavaScript dan menyimpannya ke session_state Streamlit."""
+#     data = request.get_json()
 
-    # Debugging untuk melihat data yang diterima
-    print("🔍 Data token diterima:", data)
+#     # Debugging untuk melihat data yang diterima
+#     print("🔍 Data token diterima:", data)
 
-    if not data or "token" not in data:
-        return jsonify({"error": "Token missing"}), 400
+#     if not data or "token" not in data:
+#         return jsonify({"error": "Token missing"}), 400
 
-    st.session_state["superset_token"] = data["token"]
-    print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
+#     st.session_state["superset_token"] = data["token"]
+#     print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
 
-    return jsonify({"message": "Token stored successfully"}), 200
+#     return jsonify({"message": "Token stored successfully"}), 200
         
 # Define a detailed base prompt
 BASE_PROMPT = """
