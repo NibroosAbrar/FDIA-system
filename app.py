@@ -309,7 +309,6 @@ st.markdown(
 # Dashboard section
 st.markdown("### Dashboard")
 st.components.v1.html(f"""
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
     <div id="superset-container"></div>
 
