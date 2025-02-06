@@ -311,15 +311,18 @@ st.markdown("### Dashboard")
 st.components.v1.html(
     """
     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+    <div id="dashboard-container"></div>
     <script>
         document.addEventListener("DOMContentLoaded", function() {{
             supersetEmbeddedSdk.embedDashboard({
                   id: "883359f9-6bf3-468e-9d70-e391dcfa3542", // ID dari modal yang Anda dapatkan
                   supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
+                  mountPoint: document.getElementById("dashboard-container"), // Elemen HTML tempat dashboard akan dimasukkan
                   fetchGuestToken: async () => null, // Coba tanpa token (jika tidak membutuhkan autentikasi)
             });
         }});
     </script>
+    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/sigma-dashboard/"></iframe>
     """,
     height=700,
 )
