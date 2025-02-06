@@ -308,23 +308,75 @@ st.markdown(
 
 # Dashboard section
 st.markdown("### Dashboard")
-st.components.v1.html(
-    """
+st.components.v1.html(f"""
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-    <div id="dashboard-container"></div>
+    <div id="superset-container"></div>
+
     <script>
-        document.addEventListener("DOMContentLoaded", function() {{
-            supersetEmbeddedSdk.embedDashboard({
-                  id: "883359f9-6bf3-468e-9d70-e391dcfa3542", // ID dari modal yang Anda dapatkan
-                  supersetDomain: "https://dashboard.pulse.bliv.id", // Domain Bliv
-                  mountPoint: document.getElementById("dashboard-container"), // Elemen HTML tempat dashboard akan dimasukkan
-                  fetchGuestToken: async () => "dDlM5yqMY4g", // Coba tanpa token (jika tidak membutuhkan autentikasi)
-            });
-        }});
+        const supersetUrl = "https://dashboard.pulse.bliv.id"; 
+        const supersetApiUrl = supersetUrl + "/api/v1/security";
+        const dashboardId = "883359f9-6bf3-468e-9d70-e391dcfa3542";
+
+        async function getToken() {{
+            try {{
+                // Login to get access token
+                const login_body = {{
+                    "username": "nibroos",
+                    "password": "Abroor@kun0811",
+                    "provider": "db",
+                    "refresh": true
+                }};
+
+                const login_headers = {{
+                    headers: {{ "Content-Type": "application/json" }}
+                }};
+
+                console.log("Requesting login token from:", supersetApiUrl + "/login");
+                const {{ data }} = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
+                const access_token = data["access_token"];
+                console.log("Access Token:", access_token);
+
+                // Request guest token for embedding
+                const guest_token_body = JSON.stringify({{
+                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
+                    "rls": [],
+                    "user": {{
+                        "username": "report-viewer",
+                        "first_name": "report-viewer",
+                        "last_name": "report-viewer"
+                    }}
+                }});
+
+                const guest_token_headers = {{
+                    headers: {{
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + access_token
+                    }}
+                }};
+
+                console.log("Requesting guest token from:", supersetApiUrl + "/guest_token/");
+                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
+                const guest_token = guestResponse.data["token"];
+                console.log("Guest Token:", guest_token);
+
+                // Embed Dashboard
+                supersetEmbeddedSdk.embedDashboard({{
+                    id: dashboardId,
+                    supersetDomain: supersetUrl,
+                    mountPoint: document.getElementById("superset-container"),
+                    fetchGuestToken: async () => guest_token,
+                    dashboardUiConfig: {{ hideTitle: true }}
+                }});
+
+            }} catch (error) {{
+                console.error("Error in embedding Superset dashboard:", error);
+            }}
+        }}
+
+        getToken();
     </script>
-    """,
-    height=700,
-)
+""", height=700)
 
 
 
