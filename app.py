@@ -384,8 +384,6 @@ def handle_send():
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
         
-        
-        
         st.session_state["input_text"] = ""
         
     else:
