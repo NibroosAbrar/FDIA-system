@@ -7,8 +7,7 @@ import streamlit.components.v1 as components
 from dotenv import load_dotenv
 import requests
 from flask import Flask, request, jsonify
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 # Load environment variables
 load_dotenv()
@@ -165,7 +164,6 @@ dashboard_html = f"""
 
             }} catch (error) {{
                 console.error("❌ Dashboard error:", error);
-                alert("⚠️ Failed to load dashboard.");
             }}
         }}
 
