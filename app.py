@@ -7,6 +7,8 @@ import streamlit.components.v1 as components
 from dotenv import load_dotenv
 import requests
 from flask import Flask, request, jsonify
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables
 load_dotenv()
@@ -186,7 +188,7 @@ def get_dashboard_data():
     data_request = {"dashboard_id": DASHBOARD_ID}
 
     try:
-        response = requests.post(API_URL, headers=headers, json=data_request)
+        response = requests.post(API_URL, headers=headers, json=data_request, verify=False)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
