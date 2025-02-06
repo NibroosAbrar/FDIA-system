@@ -156,33 +156,33 @@ dashboard_html = f"""
 """
 
 
-def get_dashboard_data():
-    """Menyertakan dashboard HTML dan mengambil token dari localStorage."""
+# def get_dashboard_data():
+#     """Menyertakan dashboard HTML dan mengambil token dari localStorage."""
     
-    dashboard_html = f"""
-        <script>
-            let access_token = localStorage.getItem("superset_token");
+#     dashboard_html = f"""
+#         <script>
+#             let access_token = localStorage.getItem("superset_token");
 
-            console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
+#             console.log("🔍 Token dari localStorage:", access_token);  // DEBUGGING
 
-            if (access_token) {{
-                console.log("📡 Mengirim token ke Streamlit...");
-                fetch("/store_token", {{
-                    method: "POST",
-                    headers: {{ "Content-Type": "application/json" }},
-                    body: JSON.stringify({{ "token": access_token }})
-                }})
-                .then(response => response.json())
-                .then(data => {{
-                    console.log("✅ Token berhasil dikirim ke backend:", data);
-                    window.location.reload();  // Reload agar Streamlit bisa membaca token
-                }})
-                .catch(error => console.error("❌ Error mengirim token ke backend:", error));
-            }} else {{
-                console.error("❌ Token tidak ditemukan di localStorage!");
-            }}
-        </script>
-    """
+#             if (access_token) {{
+#                 console.log("📡 Mengirim token ke Streamlit...");
+#                 fetch("/store_token", {{
+#                     method: "POST",
+#                     headers: {{ "Content-Type": "application/json" }},
+#                     body: JSON.stringify({{ "token": access_token }})
+#                 }})
+#                 .then(response => response.json())
+#                 .then(data => {{
+#                     console.log("✅ Token berhasil dikirim ke backend:", data);
+#                     window.location.reload();  // Reload agar Streamlit bisa membaca token
+#                 }})
+#                 .catch(error => console.error("❌ Error mengirim token ke backend:", error));
+#             }} else {{
+#                 console.error("❌ Token tidak ditemukan di localStorage!");
+#             }}
+#         </script>
+#     """
     
     # Tampilkan HTML di Streamlit
     st.components.v1.html(dashboard_html, height=10)
