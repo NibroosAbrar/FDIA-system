@@ -191,7 +191,7 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 # Generate a response
 def generate_response(user_input, dashboard_data):
         # Ambil data dari dashboard sebelum chatbot menjawab
-    dashboard_data = get_dashboard_data()
+    dashboard_data = st.session_state["dashboard_data"]
 
     # Jika terjadi error saat mengambil data, tampilkan error tersebut
     if "error" in dashboard_data:
@@ -392,6 +392,56 @@ dashboard_html = f"""
             }}
         }};
     </script>
+    <script>
+        async function fetchDashboardData() {
+            try {
+                let access_token = localStorage.getItem("superset_token");
+                if (!access_token) {
+                    console.log("⚠️ Token tidak ditemukan di localStorage!");
+                    return;
+                }
+    
+                const API_URL = "https://dashboard.pulse.bliv.id/api/v1/chart/data";
+                const DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542";
+    
+                const headers = {
+                    "Authorization": "Bearer " + access_token,
+                    "Content-Type": "application/json"
+                };
+    
+                const data_request = { "dashboard_id": DASHBOARD_ID };
+    
+                // Fetch data from Superset API
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify(data_request)
+                });
+    
+                if (!response.ok) {
+                    throw new Error("Gagal mengambil data dashboard!");
+                }
+    
+                const dashboard_data = await response.json();
+    
+                // Kirim data ke backend Streamlit
+                fetch("/store_dashboard_data", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "dashboard_data": dashboard_data })
+                });
+    
+                console.log("✅ Data dashboard berhasil dikirim ke backend!");
+    
+            } catch (error) {
+                console.error("❌ Error mengambil data dashboard:", error);
+            }
+        }
+    
+        // Panggil fungsi setelah halaman dimuat
+        window.onload = fetchDashboardData;
+    </script>
+
 """
 # MAIN
 st.markdown(
