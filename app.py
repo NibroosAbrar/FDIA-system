@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import requests
 from flask import Flask, request, jsonify
 import urllib3
+from bs4 import BeautifulSoup
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables
@@ -41,7 +42,6 @@ if "input_text" not in st.session_state:
 
 # Dashboard Configuration
 # Simpan token secara langsung di session state
-st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 SUP_URL = "https://dashboard.pulse.bliv.id"
 DASHBOARD_ID = "883359f9-6bf3-468e-9d70-e391dcfa3542"
 USERNAME = "pulse"
@@ -159,7 +159,7 @@ dashboard_html = f"""
         window.onload = authenticateAndEmbedDashboard;
     </script>
 """
-
+st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 
 def receive_token():
     """Menerima token dari JavaScript dan menyimpannya di `st.session_state`."""
@@ -172,27 +172,31 @@ def receive_token():
 receive_token()  # Panggil saat halaman dimuat
 
 def get_dashboard_data():
-    """Mengambil data dari Superset API menggunakan token dari session state."""
-    
-    token = st.session_state.get("superset_token")
-    
-    if not token:
-        return {"error": "⚠️ Token belum tersedia. Silakan refresh halaman atau login ulang."}
+    """Mengambil data dari halaman Superset tanpa API (scraping HTML)."""
 
+    DASHBOARD_URL = "https://dashboard.pulse.bliv.id/bliv/dashboard/sigma-dashboard/"
+    
     headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
 
-    # API_URL = f"{SUP_URL}/api/v1/security"
-    data_request = {"dashboard_id": DASHBOARD_ID}
+    response = requests.get(DASHBOARD_URL, headers=headers)
+    
+    if response.status_code != 200:
+        return {"error": f"❌ Gagal mengakses dashboard: {response.status_code}"}
 
-    try:
-        response = requests.post(headers=headers, json=data_request, verify=False)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Ambil elemen spesifik dari halaman dashboard
+    data_elements = soup.find_all("div", class_="chart-container")  # Ganti sesuai dengan struktur HTML dashboard
+    
+    if not data_elements:
+        return {"error": "❌ Tidak ada data yang ditemukan di dashboard."}
+
+    # Ekstrak teks dari elemen
+    dashboard_data = [element.text.strip() for element in data_elements]
+
+    return {"data": dashboard_data}
         
 # Buat Flask app di dalam Streamlit
 app = Flask(__name__)
