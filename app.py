@@ -3,6 +3,7 @@ import os
 import json
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -309,13 +310,31 @@ st.markdown(
 st.markdown("### Dashboard")
 # Create a placeholder div container
 st.markdown('<div id="superset-container"></div>', unsafe_allow_html=True)
-st.components.v1.html(
-    f"""
-    <iframe src="https://dashboard.pulse.bliv.id/bliv/dashboard/p/dDlM5yqMY4g/?sdk_id=20c73015-80ec-4d3b-b40c-260e4cea7349"
-            style="width:100%; height:600px; border:none;"></iframe>
-    """,
-    height=600,
-)
+# ID Dashboard yang diberikan oleh Bliv
+superset_dashboard_id = "883359f9-6bf3-468e-9d70-e391dcfa3542"
+
+# Domain Apache Superset di Bliv
+superset_domain = "https://dashboard.pulse.bliv.id"
+
+# HTML dan JavaScript untuk embed Superset Dashboard
+superset_script = f"""
+<script src="https://cdn.jsdelivr.net/npm/@superset-ui/embedded-sdk@latest"></script>
+<script>
+    supersetEmbeddedSdk.embedDashboard({{
+        id: "{superset_dashboard_id}", // ID Dashboard dari Bliv
+        supersetDomain: "{superset_domain}",
+        mountPoint: document.getElementById("dashboard-container"),
+        dashboardUiConfig: {{
+            hideTitle: false,
+            hideChartControls: false,
+        }},
+    }});
+</script>
+<div id="dashboard-container" style="width:100%; height:800px;"></div>
+"""
+
+# Tampilkan dalam Streamlit
+components.html(superset_script, height=850)
 
 # st.components.v1.html(
 #     f"""
