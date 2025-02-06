@@ -172,31 +172,27 @@ def receive_token():
 receive_token()  # Panggil saat halaman dimuat
 
 def get_dashboard_data():
-    """Mengambil data dari halaman Superset tanpa API (scraping HTML)."""
-
-    DASHBOARD_URL = "https://dashboard.pulse.bliv.id/bliv/dashboard/sigma-dashboard/"
+    """Mengambil data dari Superset API menggunakan token dari session state."""
     
+    token = st.session_state.get("superset_token")
+    
+    if not token:
+        return {"error": "⚠️ Token belum tersedia. Silakan refresh halaman atau login ulang."}
+
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
     }
 
-    response = requests.get(DASHBOARD_URL, headers=headers)
-    
-    if response.status_code != 200:
-        return {"error": f"❌ Gagal mengakses dashboard: {response.status_code}"}
+    API_URL = f"{SUP_URL}/api/v1/chart"
+    data_request = {"dashboard_id": DASHBOARD_ID}
 
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    # Ambil elemen spesifik dari halaman dashboard
-    data_elements = soup.find_all("div", class_="chart-container")  # Ganti sesuai dengan struktur HTML dashboard
-    
-    if not data_elements:
-        return {"error": "❌ Tidak ada data yang ditemukan di dashboard."}
-
-    # Ekstrak teks dari elemen
-    dashboard_data = [element.text.strip() for element in data_elements]
-
-    return {"data": dashboard_data}
+    try:
+        response = requests.post(API_URL, headers=headers, json=data_request, verify=False)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
         
 # Buat Flask app di dalam Streamlit
 app = Flask(__name__)
