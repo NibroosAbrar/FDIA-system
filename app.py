@@ -142,8 +142,7 @@ dashboard_html = f"""
                 const guest_token_headers = {{
                     headers: {{
                         "Content-Type": "application/json",
-                        "Authorization": 'Bearer ${access_token}'
-
+                        "Authorization": f"Bearer {access_token}"
                     }}
                 }};
 
@@ -165,6 +164,9 @@ dashboard_html = f"""
 
             }} catch (error) {{
                 console.error("❌ Dashboard error:", error);
+                console.log("Stored Token:", localStorage.getItem("superset_token"));
+                console.log("Login Response:", loginResponse);
+                console.log("Guest Token Response:", guestResponse);
             }}
         }}
 
