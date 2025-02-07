@@ -271,9 +271,11 @@ def get_database_schema():
 
 def ensure_database_schema():
     """Pastikan skema database tersedia sebelum chatbot dapat menghasilkan query."""
-    if "db_schema" not in st.session_state:
+    if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         st.session_state["db_schema"] = get_database_schema()
+    
     return st.session_state["db_schema"]
+
 
 def generate_sql_query(user_input):
     """Gunakan model NLP untuk mengubah teks natural menjadi SQL Query yang sesuai."""
@@ -510,27 +512,42 @@ def generate_response(user_input, database_data):
 def handle_send():
     """Menangani input pengguna dan memberikan hasil query yang sesuai."""
     user_text = st.session_state["input_text"]
-    
+
     if user_text.strip():
-        # Buat query SQL berdasarkan input pengguna
+        # **Pastikan skema database tersedia**
+        if ensure_database_schema() is None:
+            st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
+            return
+
+        # **Buat query SQL berdasarkan input pengguna**
         sql_query = generate_sql_query(user_text)
+
+        # **Periksa apakah query yang dihasilkan valid sebelum dijalankan**
+        if sql_query.startswith("❌") or "⚠️" in sql_query:
+            st.warning(sql_query)  # Tampilkan pesan error ke user
+            return  # Jangan lanjutkan eksekusi jika query tidak valid
+
+        # **Simpan query dalam chat history**
         st.session_state["chat_history"].append({"role": "ai", "content": f"SQL Query: `{sql_query}`"})
 
-        # Jalankan query SQL
+        # **Jalankan query SQL**
         result = execute_sql_query(sql_query)
 
+        # **Periksa apakah result adalah error (string) atau dataframe**
         if isinstance(result, str):
-            ai_response = result  # Jika ada error, langsung tampilkan
+            ai_response = result  # Jika error, langsung tampilkan
         else:
             ai_response = f"Hasil Query:\n\n{result.to_markdown()}"
 
-        # Simpan riwayat chat
+        # **Simpan hasil dalam chat history**
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
-        st.session_state["input_text"] = ""  # Kosongkan input setelah mengirim
+        # **Kosongkan input setelah mengirim**
+        st.session_state["input_text"] = ""  
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
+
 
 # Handle clear button click
 def handle_clear():
