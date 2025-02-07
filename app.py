@@ -108,8 +108,8 @@ dashboard_html = f"""
                     console.log("⚠️ Token tidak ditemukan. Melakukan login...");
 
                     const login_body = {{
-                        "username": "{USERNAME}",
-                        "password": "{PASSWORD}",
+                        "username": "pulse",
+                        "password": "f6d72ad2-e454-11ef-9cd2-0242ac120002",
                         "provider": "db",
                         "refresh": true
                     }};
