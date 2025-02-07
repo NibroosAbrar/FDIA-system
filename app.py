@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import requests
 from flask import Flask, request, jsonify
 import psycopg2
+import pandas as pd  
 
 
 # Load environment variables
@@ -103,8 +104,8 @@ DB_NAME = "pulse"
 DB_USER = "pulse"
 DB_PASSWORD = "uxeacaiheedeNgeebiveighetao9Eica"
 
-def get_database_data():
-    """Ambil data dari PostgreSQL yang berhubungan dengan sistem deteksi FDIA."""
+def get_hasilprediksi_data():
+    """Ambil data dari tabel 'hasilprediksi' di PostgreSQL."""
     try:
         conn = psycopg2.connect(
             host=DB_HOST,
@@ -113,9 +114,7 @@ def get_database_data():
             user=DB_USER,
             password=DB_PASSWORD
         )
-        query = """
-            SELECT * FROM fdia_detection_logs LIMIT 10;
-        """  # Ubah query sesuai tabel yang sesuai
+        query = "SELECT * FROM hasilprediksi LIMIT 10;"  # ✅ Ambil data dari tabel 'hasilprediksi'
         df = pd.read_sql_query(query, conn)
         conn.close()
         return df
@@ -396,35 +395,20 @@ def generate_response(user_input, dashboard_data):
     except Exception as e:
         return f"❌ Error processing response: {str(e)}"
 
-        
-# Generate response function
-def generate_response(user_input, database_data):
-    """Gunakan data dari PostgreSQL untuk memberikan jawaban yang lebih kontekstual."""
-    if database_data is None or database_data.empty:
-        return "⚠️ Tidak ada data yang tersedia dalam database."
-
-    database_context = database_data.to_json(orient="records", indent=2)
-    prompt = f"FDIA Detection System Chatbot:\nUser: {user_input}\n\n{database_context}"
-
-    try:
-        response = model.generate_content(prompt, stream=True)
-        return "".join(res.text for res in response)
-    except Exception as e:
-        return f"❌ Error processing response: {str(e)}"
 
 # Handle send button click
 def handle_send():
     """
-    Mengambil input dari pengguna, mengambil data dari PostgreSQL, dan menghasilkan respons chatbot.
+    Mengambil input dari pengguna, mengambil data dari tabel 'hasilprediksi', dan menghasilkan respons chatbot.
     """
     user_text = st.session_state["input_text"]
     if user_text.strip():
         # Ambil data dari PostgreSQL
-        database_data = get_database_data()
+        database_data = get_hasilprediksi_data()
 
         # Pastikan data tersedia
         if database_data is None:
-            st.warning("⚠️ Tidak ada data dari PostgreSQL.")
+            st.warning("⚠️ Tidak ada data dari tabel 'hasilprediksi'.")
             return
 
         # Gunakan data dalam chatbot
@@ -437,7 +421,6 @@ def handle_send():
         st.session_state["input_text"] = ""  # Kosongkan input setelah mengirim
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
-
 
 # Handle clear button click
 def handle_clear():
