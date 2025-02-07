@@ -61,8 +61,6 @@ try:
     login_response.raise_for_status()
     access_token = login_response.json().get("access_token")
 
-    print("✅ Token berhasil diperoleh:", access_token)
-
     # Simpan token ke session_state agar bisa digunakan
     st.session_state["superset_token"] = access_token
 
