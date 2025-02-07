@@ -119,6 +119,74 @@ def get_hasilprediksi_data():
         st.error(f"❌ Error fetching database data: {e}")
         return None
 
+def generate_sql_query(user_input):
+    """Gunakan model NLP untuk mengubah teks natural menjadi SQL Query yang hanya menggunakan SELECT."""
+    if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
+        return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
+
+    schema_context = st.session_state["db_schema"].to_json(orient="records", indent=2)
+
+    prompt = f"""
+    Anda adalah AI yang mengubah teks natural menjadi SQL Query.
+    **Pastikan hanya menghasilkan query dengan SELECT dan tidak menggunakan INSERT, UPDATE, DELETE, ALTER, DROP, TRUNCATE.**
+    
+    Berikut adalah skema tabel `hasilprediksi`:
+    {schema_context}
+
+    Buat query SQL yang sesuai untuk permintaan berikut:
+    "{user_input}"
+
+    **Hanya berikan query SELECT tanpa penjelasan tambahan. Jangan sertakan karakter non-SQL.**
+    """
+
+    try:
+        response = model.generate_content(prompt, stream=False)
+        sql_query = response.text.strip()
+
+        # Validasi: Pastikan query hanya menggunakan SELECT
+        if not sql_query.lower().startswith("select"):
+            return "❌ Query tidak diizinkan. Hanya query SELECT yang dapat dieksekusi."
+
+        if "hasilprediksi" not in sql_query.lower():
+            return "❌ Query harus hanya menggunakan tabel `hasilprediksi`."
+
+        return sql_query
+
+    except Exception as e:
+        return f"❌ Error processing SQL query: {str(e)}"
+
+def execute_sql_query(sql_query):
+    """Eksekusi SQL Query yang diberikan hanya jika query menggunakan SELECT."""
+    if not sql_query or sql_query.startswith("❌"):
+        return "❌ Query tidak valid, eksekusi dibatalkan."
+
+    if not sql_query.lower().startswith("select"):
+        return "❌ Hanya query SELECT yang diizinkan."
+
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+
+        with conn.cursor() as cur:
+            cur.execute(sql_query)
+
+            # Ambil hasil query dan buat dataframe
+            columns = [desc[0] for desc in cur.description]
+            rows = cur.fetchall()
+            df = pd.DataFrame(rows, columns=columns)
+            
+        conn.close()
+        return df  # Kembalikan dataframe agar bisa ditampilkan dalam tabel
+
+    except Exception as e:
+        return f"❌ Error executing query: {str(e)}"
+
+
 
 
 # Dashboard Embed Code (Perbaikan ukuran)
@@ -422,29 +490,46 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """
-    Mengambil input dari pengguna, mengambil data dari tabel 'hasilprediksi', dan menghasilkan respons chatbot.
-    """
+    """Menangani input pengguna dan memberikan hasil query yang sesuai."""
     user_text = st.session_state["input_text"]
-    if user_text.strip():
-        # Ambil data dari PostgreSQL
-        database_data = get_hasilprediksi_data()
 
-        # Pastikan data tersedia
-        if database_data is None:
-            st.warning("⚠️ Tidak ada data dari tabel 'hasilprediksi'.")
+    if user_text.strip():
+        # **Pastikan skema database tersedia**
+        if "db_schema" not in st.session_state:
+            st.session_state["db_schema"] = get_database_schema()
+
+        if st.session_state["db_schema"] is None:
+            st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
             return
 
-        # Gunakan data dalam chatbot
-        ai_response = generate_response(user_text, database_data)
+        # **Buat query SQL berdasarkan input pengguna**
+        sql_query = generate_sql_query(user_text)
 
-        # Simpan riwayat chat
+        # **Cek apakah query valid sebelum dieksekusi**
+        if sql_query.startswith("❌"):
+            st.warning(sql_query)  # Tampilkan pesan error
+            return  # Jangan lanjutkan eksekusi jika query tidak valid
+
+        # **Jalankan query SQL**
+        result = execute_sql_query(sql_query)
+
+        # **Format hasil output**
+        if isinstance(result, str):  # Jika hasil adalah pesan error, tampilkan sebagai teks
+            ai_response = result
+        else:  # Jika hasil adalah dataframe, tampilkan dalam tabel
+            st.write("📊 **Hasil Query:**")
+            st.dataframe(result)  # Menampilkan hasil query sebagai tabel
+            ai_response = "✅ Query berhasil dijalankan dan hasil ditampilkan di atas."
+
+        # **Simpan hasil dalam chat history**
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
-        st.session_state["input_text"] = ""  # Kosongkan input setelah mengirim
+        # **Kosongkan input setelah mengirim**
+        st.session_state["input_text"] = ""  
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
+
 
 # Handle clear button click
 def handle_clear():
