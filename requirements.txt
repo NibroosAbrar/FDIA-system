@@ -7,4 +7,3 @@ google-auth
 requests
 python-dotenv
 flask
-psycopg2
