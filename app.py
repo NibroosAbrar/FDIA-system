@@ -69,114 +69,118 @@ except requests.exceptions.RequestException as e:
 
 # Dashboard Embed Code (Perbaikan ukuran)
 dashboard_html = f"""
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }}
-        #superset-container {{
-            width: 100vw; 
-            height: 100vh; 
-            position: relative;
-        }}
-        iframe {{
-            width: 100%;
-            height: 100%;
-            border: none;
-        }}
-    </style>
-
-    <div id="superset-container"></div>
-
-    <script>
-        const supersetUrl = "{SUP_URL}";
-        const supersetApiUrl = supersetUrl + "/api/v1/security";
-        const dashboardId = "{DASHBOARD_ID}";
-
-        async function authenticateAndEmbedDashboard() {{
-            let loginResponse;  // Deklarasikan loginResponse di sini agar dapat diakses di blok catch
-            try {{
-                console.log("🔍 Authenticating...");
-                let access_token = localStorage.getItem("superset_token");
-
-                if (!access_token) {{
-                    console.log("⚠️ Token tidak ditemukan. Melakukan login...");
-                    const login_body = {{
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
+        
+        <style>
+            body, html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+            #superset-container {
+                width: 100vw; 
+                height: 100vh; 
+                position: relative;
+            }
+            iframe {
+                width: 100%;
+                height: 100%;
+                border: none;
+            }
+        </style>
+        
+        <div id="superset-container"></div>
+        
+        <script>
+            const supersetUrl = "{SUP_URL}";
+            const supersetApiUrl = supersetUrl + "/api/v1/security";
+            const dashboardId = "{DASHBOARD_ID}";
+        
+            async function authenticateAndEmbedDashboard() {
+                console.log("🔄 Refresh Detected: Clearing old token...");
+                localStorage.removeItem("superset_token");  // Hapus token lama saat refresh
+                
+                let access_token = null;
+        
+                try {
+                    console.log("🔍 Authenticating...");
+                    
+                    // Lakukan login ulang untuk mendapatkan token baru
+                    const login_body = {
                         "username": "pulse",
                         "password": "f6d72ad2-e454-11ef-9cd2-0242ac120002",
                         "provider": "db",
                         "refresh": true
-                    }};
-                    const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
-                    loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
+                    };
+                    const login_headers = { headers: { "Content-Type": "application/json" } };
+        
+                    let loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
                     access_token = loginResponse.data["access_token"];
                     localStorage.setItem("superset_token", access_token);
-                }}
-
-                console.log("✅ Access Token received:", access_token);
-
-                // Kirim token ke parent (misalnya, Streamlit)
-                if (access_token) {{
-                    console.log("📡 Mengirim token ke Streamlit...");
-                    window.parent.postMessage({{ type: "TOKEN_UPDATE", token: access_token }}, "*");
-                }}
-
-                const guest_token_body = {{
-                    "resources": [{{ "type": "dashboard", "id": dashboardId }}],
-                    "rls": [],
-                    "user": {{
-                        "username": "report-viewer",
-                        "first_name": "report-viewer",
-                        "last_name": "report-viewer"
-                    }}
-                }};
-
-                const guest_token_headers = {{
-                    headers: {{
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + access_token
-                    }}
-                }};
-
-                const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
-                const guest_token = guestResponse.data["token"];
-                console.log("✅ Guest Token received.");
-
-                supersetEmbeddedSdk.embedDashboard({{
-                    id: dashboardId,
-                    supersetDomain: supersetUrl,
-                    mountPoint: document.getElementById("superset-container"),
-                    fetchGuestToken: async () => guest_token,
-                    dashboardUiConfig: {{
-                        hideTitle: true,
-                        filters: {{ expanded: false, visible: true }}
-                    }}
-                }});
-
-            }} catch (error) {{
-                console.error("❌ Dashboard error:", error);
-                if (loginResponse) {{
-                    console.log("Login Response:", loginResponse);
-                }}
-            }}
-        }}
-
-        // Menangani permintaan token dari parent (misal, Streamlit)
-        window.addEventListener("message", (event) => {{
-            if (event.data.type === "REQUEST_TOKEN") {{
-                let stored_token = localStorage.getItem("superset_token");
-                window.parent.postMessage({{ type: "TOKEN_UPDATE", token: stored_token }}, "*");
-            }}
-        }});
-
-        window.onload = authenticateAndEmbedDashboard;
-    </script>
-"""
+        
+                    console.log("✅ New Access Token:", access_token);
+        
+                    // Kirim token ke parent (misalnya, Streamlit)
+                    if (access_token) {
+                        console.log("📡 Sending token to Streamlit...");
+                        window.parent.postMessage({ type: "TOKEN_UPDATE", token: access_token }, "*");
+                    }
+        
+                    // **Dapatkan Guest Token untuk Embed Dashboard**
+                    const guest_token_body = {
+                        "resources": [{ "type": "dashboard", "id": dashboardId }],
+                        "rls": [],
+                        "user": {
+                            "username": "report-viewer",
+                            "first_name": "report-viewer",
+                            "last_name": "report-viewer"
+                        }
+                    };
+        
+                    const guest_token_headers = {
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + access_token
+                        }
+                    };
+        
+                    let guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
+                    const guest_token = guestResponse.data["token"];
+                    console.log("✅ Guest Token received:", guest_token);
+        
+                    // **Embed Dashboard**
+                    supersetEmbeddedSdk.embedDashboard({
+                        id: dashboardId,
+                        supersetDomain: supersetUrl,
+                        mountPoint: document.getElementById("superset-container"),
+                        fetchGuestToken: async () => guest_token,
+                        dashboardUiConfig: {
+                            hideTitle: true,
+                            filters: { expanded: false, visible: true }
+                        }
+                    });
+        
+                } catch (error) {
+                    console.error("❌ Dashboard error:", error);
+                    if (error.response) {
+                        console.log("Error Response Data:", error.response.data);
+                    }
+                }
+            }
+        
+            // Menangani permintaan token dari parent (misal, Streamlit)
+            window.addEventListener("message", (event) => {
+                if (event.data.type === "REQUEST_TOKEN") {
+                    let stored_token = localStorage.getItem("superset_token");
+                    window.parent.postMessage({ type: "TOKEN_UPDATE", token: stored_token }, "*");
+                }
+            });
+        
+            // **Panggil fungsi autentikasi saat halaman dimuat**
+            window.onload = authenticateAndEmbedDashboard;
+        </script> """
 
 st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 
