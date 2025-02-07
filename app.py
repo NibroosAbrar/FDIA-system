@@ -119,6 +119,8 @@ def get_hasilprediksi_data():
         st.error(f"❌ Error fetching database data: {e}")
         return None
 
+
+
 # Dashboard Embed Code (Perbaikan ukuran)
 dashboard_html = f"""
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -379,13 +381,39 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 **YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 **id di postgres hanya menunjukkan data unique saja tidak ada makna**
 """
-def generate_response(user_input, dashboard_data):
-    """Gunakan data dashboard PostgreSQL untuk memberikan jawaban yang lebih kontekstual."""
-    if dashboard_data is None or dashboard_data.empty:
-        return "⚠️ Data dashboard tidak ditemukan atau kosong."
 
-    dashboard_context = dashboard_data.to_json(orient="records", indent=2)
-    prompt = f"FDIA Detection System Chatbot:\nUser: {user_input}\n\n{dashboard_context}"
+def generate_response(user_input, database_data):
+    """
+    Gunakan data dari tabel 'hasilprediksi' untuk memberikan jawaban yang lebih akurat.
+    """
+    if database_data is None or database_data.empty:
+        return "⚠️ Tidak ada data yang tersedia dalam tabel 'hasilprediksi'."
+
+    # Pastikan data hanya mengandung informasi yang relevan untuk chatbot
+    kolom_yang_diperlukan = ["id", "label", "predicted_class", "confidence_score"]
+    
+    if not all(col in database_data.columns for col in kolom_yang_diperlukan):
+        return "⚠️ Tabel hasilprediksi tidak memiliki struktur yang sesuai."
+
+    database_context = database_data[kolom_yang_diperlukan].to_json(orient="records", indent=2)
+
+    # Perbaikan Prompt untuk lebih kontekstual
+    prompt = f"""
+    Anda adalah chatbot AI yang membaca data prediksi dari tabel 'hasilprediksi' di PostgreSQL.
+    Berikut adalah struktur tabel:
+    - id (integer) → ID unik untuk setiap prediksi.
+    - label (string) → Label asli dari data (misal: "Attack", "Normal").
+    - predicted_class (string) → Hasil prediksi model (misal: "Attack", "Normal").
+    - confidence_score (float) → Skor kepercayaan model dalam melakukan prediksi (0 - 1).
+
+    Anda harus menjawab pertanyaan pengguna berdasarkan data berikut:
+
+    {database_context}
+
+    Pertanyaan pengguna: {user_input}
+
+    **Berikan jawaban yang akurat berdasarkan data, dan jangan berasumsi jika data tidak ditemukan.**
+    """
 
     try:
         response = model.generate_content(prompt, stream=True)
