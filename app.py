@@ -390,7 +390,7 @@ def generate_response(user_input, database_data):
         return "⚠️ Tidak ada data yang tersedia dalam tabel 'hasilprediksi'."
 
     # Pastikan data hanya mengandung informasi yang relevan untuk chatbot
-    kolom_yang_diperlukan = ["id", "label", "predicted_class", "confidence_score"]
+    kolom_yang_diperlukan = ["id", "marker"]
     
     if not all(col in database_data.columns for col in kolom_yang_diperlukan):
         return "⚠️ Tabel hasilprediksi tidak memiliki struktur yang sesuai."
