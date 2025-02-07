@@ -101,8 +101,9 @@ DB_NAME = "pulse"
 DB_USER = "pulse"
 DB_PASSWORD = "uxeacaiheedeNgeebiveighetao9Eica"
 
-def get_hasilprediksi_data():
-    """Ambil data dari tabel 'hasilprediksi' di PostgreSQL."""
+
+def get_hasilprediksi_data(filter_condition=None):
+    """Ambil data dari tabel 'hasilprediksi' di PostgreSQL dengan filter tertentu."""
     try:
         conn = psycopg2.connect(
             host=DB_HOST,
@@ -111,14 +112,17 @@ def get_hasilprediksi_data():
             user=DB_USER,
             password=DB_PASSWORD
         )
-        query = "SELECT * FROM hasilprediksi;"  # ✅ Ambil data dari tabel 'hasilprediksi'
+        if filter_condition:
+            query = f"SELECT * FROM hasilprediksi WHERE {filter_condition};"
+        else:
+            query = "SELECT * FROM hasilprediksi;"
+        
         df = pd.read_sql_query(query, conn)
         conn.close()
         return df
     except Exception as e:
         st.error(f"❌ Error fetching database data: {e}")
         return None
-
 
 
 # Dashboard Embed Code (Perbaikan ukuran)
