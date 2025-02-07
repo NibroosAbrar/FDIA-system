@@ -101,6 +101,33 @@ DB_NAME = "pulse"
 DB_USER = "pulse"
 DB_PASSWORD = "uxeacaiheedeNgeebiveighetao9Eica"
 
+# 4️⃣ Fungsi untuk mendapatkan skema database (schema tables)
+def get_database_schema():
+    """Mengambil informasi seluruh tabel dan kolom dari database PostgreSQL."""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        query = """
+        SELECT table_name, column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_schema = 'public';
+        """
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        # Simpan schema dalam session_state agar tidak query ulang
+        st.session_state["db_schema"] = df
+        return df
+
+    except Exception as e:
+        st.error(f"❌ Error fetching database schema: {e}")
+        return None
+
 def get_hasilprediksi_data():
     """Ambil data dari tabel 'hasilprediksi' di PostgreSQL."""
     try:
