@@ -346,21 +346,19 @@ def generate_response(user_input):
         
 # Generate a response
 def generate_response(user_input, dashboard_data):
-        # Ambil data dari dashboard sebelum chatbot menjawab
-    dashboard_data = get_dashboard_data()
-
-    # Jika terjadi error saat mengambil data, tampilkan error tersebut
+    # ✅ Pastikan data dashboard telah diterima
     if "error" in dashboard_data:
         return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
 
-    # Format data dashboard untuk digunakan dalam prompt
+    # ✅ Gunakan data dashboard dalam prompt
     dashboard_context = json.dumps(dashboard_data, indent=2)
-    prompt = "FDIA Detection System Chatbot:\nUser: " + user_input
+    prompt = f"FDIA Detection System Chatbot:\nUser: {user_input}\n\n{dashboard_context}"
+
     try:
         response = model.generate_content(prompt, stream=True)
         return "".join(res.text for res in response)
     except Exception:
-        return "I'm sorry, I couldn't process your request. Please try again later."
+        return "❌ Error processing response. Please try again later."
 
 # Handle send button click
 def handle_send():
@@ -369,18 +367,25 @@ def handle_send():
     """
     user_text = st.session_state["input_text"]
     if user_text.strip():
-        # Ambil data dari dashboard Superset sebelum chatbot menjawab
-        # dashboard_data = get_dashboard_data()
-        
-        # Gunakan data dashboard dalam jawaban chatbot
+        # ✅ Ambil data dari dashboard sebelum chatbot menjawab
+        dashboard_data = get_dashboard_data()
+
+        # ✅ Pastikan data dashboard berhasil diambil
+        if "error" in dashboard_data:
+            st.warning(f"⚠️ Dashboard data error: {dashboard_data['error']}")
+            return
+
+        # ✅ Gunakan data dashboard dalam jawaban chatbot
         ai_response = generate_response(user_text, dashboard_data)
+
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
-        
+
         st.session_state["input_text"] = ""
-        
+
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
+
 
 # Handle clear button click
 def handle_clear():
