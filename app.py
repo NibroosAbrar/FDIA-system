@@ -190,7 +190,7 @@ def generate_sql_query(user_input):
     """
 
     try:
-        response = model.generate_content(prompt, stream=True)
+        response = model.generate_content(prompt, stream=False)
         sql_query = response.text.strip()
 
         # Hapus tanda ```sql atau ``` yang mungkin muncul
