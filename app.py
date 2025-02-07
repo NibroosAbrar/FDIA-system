@@ -180,16 +180,6 @@ dashboard_html = f"""
 
 st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 
-def receive_token():
-    """Menerima token dari JavaScript dan menyimpannya di `st.session_state`."""
-    query_params = st.experimental_get_query_params()
-
-    if "token" in query_params:
-        st.session_state["superset_token"] = query_params["token"]
-        print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
-
-receive_token()  # Panggil saat halaman dimuat
-
 def get_dashboard_data():
     """Mengambil data dari Superset API menggunakan token dari session state."""
     
