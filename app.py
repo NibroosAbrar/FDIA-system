@@ -370,7 +370,7 @@ def handle_send():
     user_text = st.session_state["input_text"]
     if user_text.strip():
         # Ambil data dari dashboard Superset sebelum chatbot menjawab
-        dashboard_data = get_dashboard_data()
+        # dashboard_data = get_dashboard_data()
         
         # Gunakan data dashboard dalam jawaban chatbot
         ai_response = generate_response(user_text, get_dashboard_data)
