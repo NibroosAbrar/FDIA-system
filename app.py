@@ -85,7 +85,6 @@ def login_to_superset():
         
         if token:
             st.session_state["superset_token"] = token
-            st.success("✅ Token berhasil diperbarui!")
         else:
             st.error("❌ Token tidak ditemukan dalam respons API.")
 
