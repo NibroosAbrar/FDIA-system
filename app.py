@@ -119,6 +119,14 @@ def get_hasilprediksi_data():
         st.error(f"❌ Error fetching database data: {e}")
         return None
 
+def is_sql_query(user_input):
+    """Deteksi apakah input pengguna adalah pertanyaan SQL atau tidak."""
+    sql_keywords = ["select", "count", "group by", "order by", "where", "table", "column", "data", "jumlah", "berapa", "hitung"]
+    
+    # Cek apakah input mengandung kata-kata terkait SQL
+    return any(word in user_input.lower() for word in sql_keywords)
+
+
 def generate_sql_query(user_input):
     """Mengubah teks natural menjadi query SQL, tetapi hanya mengizinkan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.
     MENOLAK query INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
@@ -507,7 +515,7 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """Menangani input pengguna dan memberikan hasil query sebagai teks."""
+    """Menangani input pengguna, baik sebagai pertanyaan SQL atau pertanyaan umum."""
     user_text = st.session_state["input_text"]
 
     if user_text.strip():
@@ -519,16 +527,21 @@ def handle_send():
             st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
             return
 
-        # **Buat query SQL berdasarkan input pengguna**
-        sql_query = generate_sql_query(user_text)
+        # **Cek apakah input perlu diproses sebagai query SQL**
+        if is_sql_query(user_text):
+            # Buat query SQL
+            sql_query = generate_sql_query(user_text)
 
-        # **Cek apakah query valid sebelum dieksekusi**
-        if sql_query.startswith("❌"):
-            st.warning(sql_query)  # Tampilkan pesan error
-            return  # Jangan lanjutkan eksekusi jika query tidak valid
+            # **Cek apakah query valid sebelum dieksekusi**
+            if sql_query.startswith("❌"):
+                st.warning(sql_query)  # Tampilkan pesan error
+                return  # Jangan lanjutkan eksekusi jika query tidak valid
 
-        # **Jalankan query SQL**
-        ai_response = execute_sql_query(sql_query)
+            # **Jalankan query SQL**
+            ai_response = execute_sql_query(sql_query)
+        else:
+            # **Jika bukan SQL, gunakan model AI untuk menjawab pertanyaan**
+            ai_response = model.generate_content(user_text).text.strip()
 
         # **Simpan hasil dalam chat history**
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
