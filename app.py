@@ -115,16 +115,16 @@ def get_database_schema():
             password=DB_PASSWORD
         )
         query = """
-        SELECT table_name, column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_schema = 'public';
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'hasilprediksi';
         """
         df = pd.read_sql_query(query, conn)
         conn.close()
 
         # Simpan schema dalam session_state agar tidak query ulang
-        st.session_state["db_schema"] = df
-        return df
+        st.session_state["db_schema"] = df["column_name"].tolist()
+        return st.session_state["db_schema"]
 
     except Exception as e:
         st.error(f"❌ Error fetching database schema: {e}")
