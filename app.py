@@ -146,12 +146,21 @@ def get_hasilprediksi_data():
         st.error(f"❌ Error fetching database data: {e}")
         return None
 
-def is_sql_query(user_input):
-    """Deteksi apakah input pengguna adalah pertanyaan SQL atau tidak."""
-    sql_keywords = ["select", "count", "group by", "order by", "where", "table", "column", "data", "jumlah", "berapa", "hitung"]
-    
-    # Cek apakah input mengandung kata-kata terkait SQL
-    return any(word in user_input.lower() for word in sql_keywords)
+if is_sql_query(user_text):
+    # Buat query SQL
+    sql_query = generate_sql_query(user_text)
+
+    # Debug: tampilkan query sebelum dieksekusi
+    st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
+
+    # **Cek apakah query valid sebelum dieksekusi**
+    if sql_query.startswith("❌"):
+        st.warning(sql_query)  # Tampilkan pesan error
+        return  # Jangan lanjutkan eksekusi jika query tidak valid
+
+    # **Jalankan query SQL**
+    ai_response = execute_sql_query(sql_query)
+
 
 
 def generate_sql_query(user_input):
