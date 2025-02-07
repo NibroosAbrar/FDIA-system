@@ -67,6 +67,35 @@ try:
 except requests.exceptions.RequestException as e:
     print(f"❌ Error saat login: {e}")
 
+def login_to_superset():
+    """Login ke Superset API dan simpan token di session_state."""
+    LOGIN_URL = f"{SUP_URL}/api/v1/security/login"
+    login_data = {
+        "username": USERNAME,
+        "password": PASSWORD,
+        "provider": "db",
+        "refresh": True
+    }
+
+    try:
+        response = requests.post(LOGIN_URL, json=login_data)
+        response.raise_for_status()  # Pastikan tidak error
+
+        token = response.json().get("access_token")
+        
+        if token:
+            st.session_state["superset_token"] = token
+            st.success("✅ Token berhasil diperbarui!")
+        else:
+            st.error("❌ Token tidak ditemukan dalam respons API.")
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Error saat login Superset: {e}")
+
+# Panggil fungsi login sebelum mengambil data dashboard
+login_to_superset()
+
+
 # Dashboard Embed Code (Perbaikan ukuran)
 dashboard_html = f"""
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -188,9 +217,11 @@ st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmc
 
 def get_dashboard_data():
     """Mengambil data dari Superset API menggunakan token dari session state."""
+    
     token = st.session_state.get("superset_token")
-
+    
     if not token:
+        st.error("⚠️ Token belum tersedia. Coba login ulang!")
         return {"error": "⚠️ Token belum tersedia. Silakan refresh halaman atau login ulang."}
 
     headers = {
@@ -209,7 +240,8 @@ def get_dashboard_data():
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
+        st.error(f"❌ Error saat mengambil data dashboard: {e}")
+        return {"error": f"❌ Error saat mengambil data dashboard: {e}"}
 
 
 # Buat Flask app di dalam Streamlit
