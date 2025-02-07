@@ -184,33 +184,7 @@ dashboard_html = f"""
 """
 
 st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
-
-def get_dashboard_data():
-    """Mengambil data dari Superset API menggunakan token dari session state."""
-    
-    token = st.session_state.get("superset_token")
-    
-    if not token:
-        return {"error": "⚠️ Token belum tersedia. Silakan refresh halaman atau login ulang."}
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-    API_URL = f"{SUP_URL}/api/v1/chart/data"
-    data_request = {
-    "dashboard_id": DASHBOARD_ID,
-    "force": True  # Superset membutuhkan parameter ini untuk mengambil data terbaru
-    }
-
-    try:
-        response = requests.post(API_URL, headers=headers, json=data_request, verify=False)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        return {"error": f"❌ Error saat mengambil data dashboard: {str(e)}"}
-        
+     
 # Buat Flask app di dalam Streamlit
 app = Flask(__name__)
 
@@ -229,7 +203,8 @@ def store_token():
     print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
 
     return jsonify({"message": "Token stored successfully"}), 200
-        
+
+dashboard_context = json.dumps(get_dashboard_data(), indent=2)
 # Define a detailed base prompt
 BASE_PROMPT = """
 {json.dumps(dashboard_data, indent=2)}
@@ -350,7 +325,26 @@ service → Jenis layanan jaringan yang terdeteksi (http, dns, ftp, dll.).
 dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 **YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 """
+def generate_response(user_input):
+    """
+    Menghasilkan jawaban chatbot dengan mempertimbangkan data dashboard.
+    """
+    dashboard_data = get_dashboard_data()
+    
+    # Jika terjadi error saat mengambil data, kembalikan error tersebut
+    if "error" in dashboard_data:
+        return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
 
+    # Tambahkan data dashboard ke dalam prompt
+    dashboard_context = json.dumps(dashboard_data, indent=2)
+    full_prompt = BASE_PROMPT + f"\n\nUser: {user_input}"
+
+    try:
+        response = model.generate_content(full_prompt, stream=True)
+        return "".join(res.text for res in response)
+    except Exception as e:
+        return f"❌ Error saat memproses jawaban: {str(e)}"
+        
 # Generate a response
 def generate_response(user_input, dashboard_data):
         # Ambil data dari dashboard sebelum chatbot menjawab
