@@ -204,7 +204,6 @@ def store_token():
 
     return jsonify({"message": "Token stored successfully"}), 200
 
-dashboard_context = json.dumps(get_dashboard_data(), indent=2)
 # Define a detailed base prompt
 BASE_PROMPT = """
 {json.dumps(dashboard_data, indent=2)}
