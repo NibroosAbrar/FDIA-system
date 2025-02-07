@@ -111,7 +111,7 @@ def get_hasilprediksi_data():
             user=DB_USER,
             password=DB_PASSWORD
         )
-        query = "SELECT * FROM hasilprediksi LIMIT 10;"  # ✅ Ambil data dari tabel 'hasilprediksi'
+        query = "SELECT * FROM hasilprediksi;"  # ✅ Ambil data dari tabel 'hasilprediksi'
         df = pd.read_sql_query(query, conn)
         conn.close()
         return df
