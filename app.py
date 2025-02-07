@@ -377,6 +377,7 @@ conn_state (Connection State) → Status koneksi antara client dan server (S0, S
 service → Jenis layanan jaringan yang terdeteksi (http, dns, ftp, dll.).
 dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 **YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
+**id di postgres hanya menunjukkan data unique saja tidak ada makna**
 """
 def generate_response(user_input, dashboard_data):
     """Gunakan data dashboard PostgreSQL untuk memberikan jawaban yang lebih kontekstual."""
