@@ -55,7 +55,7 @@ login_data = {
 }
 
 try:
-    login_response = requests.post(LOGIN_URL, json=login_data)
+    login_response = requests.post(LOGIN_URL, json=login_data, verify=False)
     login_response.raise_for_status()
     access_token = login_response.json().get("access_token")
 
@@ -78,7 +78,7 @@ def login_to_superset():
     }
 
     try:
-        response = requests.post(LOGIN_URL, json=login_data)
+        response = requests.post(LOGIN_URL, json=login_data, verify=False)
         response.raise_for_status()  # Pastikan tidak error
 
         token = response.json().get("access_token")
