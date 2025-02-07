@@ -520,6 +520,10 @@ def handle_send():
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
 
+# Handle clear button click
+def handle_clear():
+    st.session_state["chat_history"] = []
+    st.session_state["input_text"] = ""
 
 # CSS (Copied from Project 1)
 st.markdown(
