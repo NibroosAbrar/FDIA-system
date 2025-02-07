@@ -133,9 +133,9 @@ dashboard_html = f"""
                     "resources": [{{ "type": "dashboard", "id": dashboardId }}],
                     "rls": [],
                     "user": {{
-                        "username": "report-viewer",
-                        "first_name": "report-viewer",
-                        "last_name": "report-viewer"
+                        "username": "nibroos",
+                        "first_name": "Muhammad",
+                        "last_name": "Nibroos Abrar"
                     }}
                 }};
 
