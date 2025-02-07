@@ -402,9 +402,7 @@ def generate_response(user_input, database_data):
     Anda adalah chatbot AI yang membaca data prediksi dari tabel 'hasilprediksi' di PostgreSQL.
     Berikut adalah struktur tabel:
     - id (integer) → ID unik untuk setiap prediksi.
-    - label (string) → Label asli dari data (misal: "Attack", "Normal").
-    - predicted_class (string) → Hasil prediksi model (misal: "Attack", "Normal").
-    - confidence_score (float) → Skor kepercayaan model dalam melakukan prediksi (0 - 1).
+    - membaca kolom marker untuk mengidentifikasi attack dan natural
 
     Anda harus menjawab pertanyaan pengguna berdasarkan data berikut:
 
