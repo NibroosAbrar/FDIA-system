@@ -101,6 +101,8 @@ DB_NAME = "pulse"
 DB_USER = "pulse"
 DB_PASSWORD = "uxeacaiheedeNgeebiveighetao9Eica"
 
+
+
 # 4️⃣ Fungsi untuk mendapatkan skema database (schema tables)
 def get_database_schema():
     """Mengambil informasi seluruh tabel dan kolom dari database PostgreSQL."""
@@ -128,6 +130,8 @@ def get_database_schema():
         st.error(f"❌ Error fetching database schema: {e}")
         return None
 
+
+
 def get_hasilprediksi_data():
     """Ambil data dari tabel 'hasilprediksi' di PostgreSQL."""
     try:
@@ -146,6 +150,12 @@ def get_hasilprediksi_data():
         st.error(f"❌ Error fetching database data: {e}")
         return None
 
+def is_sql_query(user_input):
+    """Deteksi apakah input pengguna adalah pertanyaan SQL atau tidak."""
+    sql_keywords = ["select", "count", "group by", "order by", "where", "table", "column", "data", "jumlah", "berapa", "hitung"]
+
+    # Cek apakah input mengandung kata-kata terkait SQL
+    return any(word in user_input.lower() for word in sql_keywords)
 
 def generate_sql_query(user_input):
     """Mengubah teks natural menjadi query SQL, tetapi hanya mengizinkan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.
