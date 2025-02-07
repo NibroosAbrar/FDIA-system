@@ -206,7 +206,7 @@ def execute_sql_query(sql_query):
             return "✅ Query berhasil dijalankan, tetapi tidak ada data yang ditemukan."
 
         result_text = "\n".join([", ".join(map(str, row)) for row in rows])
-        return f"✅ Hasil Query:\n\n{result_text}"
+        return f"{result_text}"
 
     except Exception as e:
         return f"❌ Error executing query: {str(e)}"
