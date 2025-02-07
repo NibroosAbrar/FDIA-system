@@ -120,8 +120,8 @@ def get_hasilprediksi_data():
         return None
 
 def generate_sql_query(user_input):
-    """Mengubah teks natural menjadi query SQL. 
-    Hanya mengizinkan query SELECT, COUNT, FILTER, GROUP BY, dll., tetapi MENOLAK INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
+    """Mengubah teks natural menjadi query SQL, tetapi hanya mengizinkan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.
+    MENOLAK query INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
     """
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
@@ -137,21 +137,24 @@ def generate_sql_query(user_input):
     - GROUP BY (mengelompokkan data)
     - ORDER BY (mengurutkan data)
     - WHERE (memfilter data)
-    
+
     Berikut adalah skema tabel `hasilprediksi`:
     {schema_context}
 
     Buat query SQL yang sesuai untuk permintaan berikut:
     "{user_input}"
 
-    **Hanya berikan query SQL tanpa penjelasan tambahan. Jangan sertakan karakter non-SQL.**
+    **Hanya berikan query SQL tanpa format Markdown (tidak ada tanda ```sql atau ```).**
     """
 
     try:
         response = model.generate_content(prompt, stream=False)
         sql_query = response.text.strip()
 
-        # Cegah query yang mengubah data (INSERT, UPDATE, DELETE, dll.)
+        # Hapus tanda ```sql atau ``` yang mungkin muncul
+        sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
+
+        # Cegah query yang mengubah data
         forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
         if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
             return "❌ Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
@@ -160,6 +163,7 @@ def generate_sql_query(user_input):
 
     except Exception as e:
         return f"❌ Error processing SQL query: {str(e)}"
+
 
 
 def execute_sql_query(sql_query):
