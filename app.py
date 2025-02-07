@@ -99,31 +99,28 @@ dashboard_html = f"""
         const dashboardId = "{DASHBOARD_ID}";
 
         async function authenticateAndEmbedDashboard() {{
+            let loginResponse;  // Deklarasikan loginResponse di sini agar dapat diakses di blok catch
             try {{
                 console.log("🔍 Authenticating...");
-
                 let access_token = localStorage.getItem("superset_token");
 
                 if (!access_token) {{
                     console.log("⚠️ Token tidak ditemukan. Melakukan login...");
-
                     const login_body = {{
                         "username": "pulse",
                         "password": "f6d72ad2-e454-11ef-9cd2-0242ac120002",
                         "provider": "db",
                         "refresh": true
                     }};
-
                     const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
-                    const loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
-
+                    loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
                     access_token = loginResponse.data["access_token"];
                     localStorage.setItem("superset_token", access_token);
                 }}
 
                 console.log("✅ Access Token received:", access_token);
 
-                // Kirim token ke Streamlit
+                // Kirim token ke parent (misalnya, Streamlit)
                 if (access_token) {{
                     console.log("📡 Mengirim token ke Streamlit...");
                     window.parent.postMessage({{ type: "TOKEN_UPDATE", token: access_token }}, "*");
@@ -133,9 +130,9 @@ dashboard_html = f"""
                     "resources": [{{ "type": "dashboard", "id": dashboardId }}],
                     "rls": [],
                     "user": {{
-                        "username": "nibroos",
-                        "first_name": "Muhammad",
-                        "last_name": "Nibroos Abrar"
+                        "username": "report-viewer",
+                        "first_name": "report-viewer",
+                        "last_name": "report-viewer"
                     }}
                 }};
 
@@ -148,7 +145,6 @@ dashboard_html = f"""
 
                 const guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
                 const guest_token = guestResponse.data["token"];
-
                 console.log("✅ Guest Token received.");
 
                 supersetEmbeddedSdk.embedDashboard({{
@@ -164,13 +160,13 @@ dashboard_html = f"""
 
             }} catch (error) {{
                 console.error("❌ Dashboard error:", error);
-                console.log("Stored Token:", localStorage.getItem("superset_token"));
-                console.log("Login Response:", loginResponse);
-                console.log("Guest Token Response:", guestResponse);
+                if (loginResponse) {{
+                    console.log("Login Response:", loginResponse);
+                }}
             }}
         }}
 
-        // Tangani permintaan token dari Python
+        // Menangani permintaan token dari parent (misal, Streamlit)
         window.addEventListener("message", (event) => {{
             if (event.data.type === "REQUEST_TOKEN") {{
                 let stored_token = localStorage.getItem("superset_token");
@@ -181,6 +177,7 @@ dashboard_html = f"""
         window.onload = authenticateAndEmbedDashboard;
     </script>
 """
+
 st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 
 def receive_token():
