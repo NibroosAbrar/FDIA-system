@@ -243,6 +243,76 @@ dashboard_html = f"""
 
 st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 
+def get_database_schema():
+    """Mengambil informasi seluruh tabel dan kolom dari database PostgreSQL."""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        query = """
+        SELECT table_name, column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_schema = 'public';
+        """
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        # Simpan schema dalam session_state agar tidak query ulang
+        st.session_state["db_schema"] = df
+        return df
+
+    except Exception as e:
+        st.error(f"❌ Error fetching database schema: {e}")
+        return None
+
+def generate_sql_query(user_input):
+    """Gunakan model NLP untuk mengubah teks natural menjadi SQL Query yang sesuai."""
+    if "db_schema" not in st.session_state:
+        return "⚠️ Database schema belum tersedia. Silakan jalankan fungsi `get_database_schema()` terlebih dahulu."
+
+    # Konversi schema menjadi string agar bisa diproses oleh AI
+    schema_context = st.session_state["db_schema"].to_json(orient="records", indent=2)
+
+    prompt = f"""
+    Anda adalah AI yang dapat mengubah teks natural menjadi SQL Query.
+    Berikut adalah skema database:
+    
+    {schema_context}
+    
+    Buat query SQL yang sesuai untuk pertanyaan berikut:
+    "{user_input}"
+    
+    **Hanya berikan query SQL tanpa penjelasan tambahan.**
+    """
+
+    try:
+        response = model.generate_content(prompt, stream=False)
+        sql_query = response.text.strip().split("\n")[0]  # Ambil hanya query pertama
+        return sql_query
+
+    except Exception as e:
+        return f"❌ Error processing SQL query: {str(e)}"
+
+def execute_sql_query(sql_query):
+    """Eksekusi SQL Query yang diberikan."""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        df = pd.read_sql_query(sql_query, conn)
+        conn.close()
+        return df
+
+    except Exception as e:
+        return f"❌ Error executing query: {str(e)}"
 
 
 # Buat Flask app di dalam Streamlit
@@ -426,21 +496,21 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """
-    Mengambil input dari pengguna, mengambil data dari tabel 'hasilprediksi', dan menghasilkan respons chatbot.
-    """
+    """Menangani input pengguna dan memberikan hasil query yang sesuai."""
     user_text = st.session_state["input_text"]
+    
     if user_text.strip():
-        # Ambil data dari PostgreSQL
-        database_data = get_hasilprediksi_data()
+        # Buat query SQL berdasarkan input pengguna
+        sql_query = generate_sql_query(user_text)
+        st.session_state["chat_history"].append({"role": "ai", "content": f"SQL Query: `{sql_query}`"})
 
-        # Pastikan data tersedia
-        if database_data is None:
-            st.warning("⚠️ Tidak ada data dari tabel 'hasilprediksi'.")
-            return
+        # Jalankan query SQL
+        result = execute_sql_query(sql_query)
 
-        # Gunakan data dalam chatbot
-        ai_response = generate_response(user_text, database_data)
+        if isinstance(result, str):
+            ai_response = result  # Jika ada error, langsung tampilkan
+        else:
+            ai_response = f"Hasil Query:\n\n{result.to_markdown()}"
 
         # Simpan riwayat chat
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
@@ -450,10 +520,6 @@ def handle_send():
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
 
-# Handle clear button click
-def handle_clear():
-    st.session_state["chat_history"] = []
-    st.session_state["input_text"] = ""
 
 # CSS (Copied from Project 1)
 st.markdown(
