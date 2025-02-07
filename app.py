@@ -103,8 +103,8 @@ DB_NAME = "pulse"
 DB_USER = "pulse"
 DB_PASSWORD = "uxeacaiheedeNgeebiveighetao9Eica"
 
-def get_dashboard_data(dashboard_id):
-    """Ambil data dari PostgreSQL yang berhubungan dengan dashboard Superset."""
+def get_database_data():
+    """Ambil data dari PostgreSQL yang berhubungan dengan sistem deteksi FDIA."""
     try:
         conn = psycopg2.connect(
             host=DB_HOST,
@@ -113,20 +113,15 @@ def get_dashboard_data(dashboard_id):
             user=DB_USER,
             password=DB_PASSWORD
         )
-        query = f"""
-            SELECT d.id AS dashboard_id, d.dashboard_title, s.slice_name, s.viz_type, s.params 
-            FROM dashboards d
-            JOIN dashboard_slices ds ON d.id = ds.dashboard_id
-            JOIN slices s ON ds.slice_id = s.id
-            WHERE d.id = {dashboard_id};
-        """
+        query = """
+            SELECT * FROM fdia_detection_logs LIMIT 10;
+        """  # Ubah query sesuai tabel yang sesuai
         df = pd.read_sql_query(query, conn)
         conn.close()
         return df
     except Exception as e:
-        st.error(f"❌ Error fetching dashboard data: {e}")
+        st.error(f"❌ Error fetching database data: {e}")
         return None
-
 
 # Dashboard Embed Code (Perbaikan ukuran)
 dashboard_html = f"""
@@ -246,34 +241,6 @@ dashboard_html = f"""
 
 st.session_state["superset_token"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzM4ODQ4MDMyLCJqdGkiOiIyNWQ3MGM1Ny02OTM3LTRjY2EtOTE3NS1iNWFkZTJjZDFiMjIiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjo1LCJuYmYiOjE3Mzg4NDgwMzIsImNzcmYiOiJiMTIyYzFjYy0xMzIyLTQzZWItOWEyMy05YjBkODZmNjNmOTgiLCJleHAiOjE3Mzg4NDg5MzJ9.mz2b7hV5fGZgRj92EVBkeBwbR7amFlXs7bZD7erIOK0"
 
-
-def get_dashboard_data():
-    """Mengambil data dari Superset API menggunakan token dari session state."""
-    
-    token = st.session_state.get("superset_token")
-    
-    if not token:
-        st.error("⚠️ Token belum tersedia. Coba login ulang!")
-        return {"error": "⚠️ Token belum tersedia. Silakan refresh halaman atau login ulang."}
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-    API_URL = f"{SUP_URL}/api/v1/chart/data"
-    data_request = {
-        "dashboard_id": DASHBOARD_ID,
-        "force": True  # Superset membutuhkan parameter ini untuk mengambil data terbaru
-    }
-
-    try:
-        response = requests.post(API_URL, headers=headers, json=data_request, verify=False)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        st.error(f"❌ Error saat mengambil data dashboard: {e}")
-        return {"error": f"❌ Error saat mengambil data dashboard: {e}"}
 
 
 # Buat Flask app di dalam Streamlit
@@ -430,50 +397,44 @@ def generate_response(user_input, dashboard_data):
         return f"❌ Error processing response: {str(e)}"
 
         
-# Generate a response
-def generate_response(user_input, dashboard_data):
-    # ✅ Pastikan data dashboard telah diterima
-    if "error" in dashboard_data:
-        return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
+# Generate response function
+def generate_response(user_input, database_data):
+    """Gunakan data dari PostgreSQL untuk memberikan jawaban yang lebih kontekstual."""
+    if database_data is None or database_data.empty:
+        return "⚠️ Tidak ada data yang tersedia dalam database."
 
-    # ✅ Gunakan data dashboard dalam prompt
-    dashboard_context = json.dumps(dashboard_data, indent=2)
-    prompt = f"FDIA Detection System Chatbot:\nUser: {user_input}\n\n{dashboard_context}"
+    database_context = database_data.to_json(orient="records", indent=2)
+    prompt = f"FDIA Detection System Chatbot:\nUser: {user_input}\n\n{database_context}"
 
     try:
         response = model.generate_content(prompt, stream=True)
         return "".join(res.text for res in response)
-    except Exception:
-        return "❌ Error processing response. Please try again later."
+    except Exception as e:
+        return f"❌ Error processing response: {str(e)}"
 
 # Handle send button click
 def handle_send():
     """
-    Mengambil input dari pengguna, mengambil data dashboard, dan menghasilkan respons chatbot.
+    Mengambil input dari pengguna, mengambil data dari PostgreSQL, dan menghasilkan respons chatbot.
     """
     user_text = st.session_state["input_text"]
     if user_text.strip():
-        # ✅ Cek apakah get_dashboard_data sudah didefinisikan sebelum digunakan
-        if 'get_dashboard_data' not in globals():
-            st.error("⚠️ Function get_dashboard_data() is not defined.")
-            return
-        
-        # ✅ Ambil data dari dashboard sebelum chatbot menjawab
-        dashboard_data = get_dashboard_data()
+        # Ambil data dari PostgreSQL
+        database_data = get_database_data()
 
-        # ✅ Pastikan data dashboard berhasil diambil
-        if "error" in dashboard_data:
-            st.warning(f"⚠️ Dashboard data error: {dashboard_data['error']}")
+        # Pastikan data tersedia
+        if database_data is None:
+            st.warning("⚠️ Tidak ada data dari PostgreSQL.")
             return
 
-        # ✅ Gunakan data dashboard dalam jawaban chatbot
-        ai_response = generate_response(user_text, dashboard_data)
+        # Gunakan data dalam chatbot
+        ai_response = generate_response(user_text, database_data)
 
+        # Simpan riwayat chat
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
-        st.session_state["input_text"] = ""
-
+        st.session_state["input_text"] = ""  # Kosongkan input setelah mengirim
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
 
