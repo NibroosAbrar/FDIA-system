@@ -269,10 +269,16 @@ def get_database_schema():
         st.error(f"❌ Error fetching database schema: {e}")
         return None
 
+def ensure_database_schema():
+    """Pastikan skema database tersedia sebelum chatbot dapat menghasilkan query."""
+    if "db_schema" not in st.session_state:
+        st.session_state["db_schema"] = get_database_schema()
+    return st.session_state["db_schema"]
+
 def generate_sql_query(user_input):
     """Gunakan model NLP untuk mengubah teks natural menjadi SQL Query yang sesuai."""
-    if "db_schema" not in st.session_state:
-        return "⚠️ Database schema belum tersedia. Silakan jalankan fungsi `get_database_schema()` terlebih dahulu."
+    if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
+        return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
     # Konversi schema menjadi string agar bisa diproses oleh AI
     schema_context = st.session_state["db_schema"].to_json(orient="records", indent=2)
@@ -286,16 +292,22 @@ def generate_sql_query(user_input):
     Buat query SQL yang sesuai untuk pertanyaan berikut:
     "{user_input}"
     
-    **Hanya berikan query SQL tanpa penjelasan tambahan.**
+    **Hanya berikan query SQL tanpa penjelasan tambahan. Jangan sertakan karakter non-SQL.**
     """
 
     try:
         response = model.generate_content(prompt, stream=False)
-        sql_query = response.text.strip().split("\n")[0]  # Ambil hanya query pertama
+        sql_query = response.text.strip()
+
+        # **Validasi hasil query sebelum dikembalikan**
+        if not sql_query.lower().startswith(("select", "insert", "update", "delete")):
+            return "❌ Query yang dihasilkan tidak valid. Silakan coba lagi."
+
         return sql_query
 
     except Exception as e:
         return f"❌ Error processing SQL query: {str(e)}"
+
 
 def execute_sql_query(sql_query):
     """Eksekusi SQL Query yang diberikan."""
