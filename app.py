@@ -7,6 +7,7 @@ import streamlit.components.v1 as components
 from dotenv import load_dotenv
 import requests
 from flask import Flask, request, jsonify
+import psycopg2
 
 
 # Load environment variables
@@ -94,6 +95,37 @@ def login_to_superset():
 
 # Panggil fungsi login sebelum mengambil data dashboard
 login_to_superset()
+
+# Konfigurasi koneksi PostgreSQL
+DB_HOST = "34.50.80.66"
+DB_PORT = "5432"
+DB_NAME = "pulse"
+DB_USER = "pulse"
+DB_PASSWORD = "uxeacaiheedeNgeebiveighetao9Eica"
+
+def get_dashboard_data(dashboard_id):
+    """Ambil data dari PostgreSQL yang berhubungan dengan dashboard Superset."""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        query = f"""
+            SELECT d.id AS dashboard_id, d.dashboard_title, s.slice_name, s.viz_type, s.params 
+            FROM dashboards d
+            JOIN dashboard_slices ds ON d.id = ds.dashboard_id
+            JOIN slices s ON ds.slice_id = s.id
+            WHERE d.id = {dashboard_id};
+        """
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        return df
+    except Exception as e:
+        st.error(f"❌ Error fetching dashboard data: {e}")
+        return None
 
 
 # Dashboard Embed Code (Perbaikan ukuran)
@@ -383,25 +415,20 @@ service → Jenis layanan jaringan yang terdeteksi (http, dns, ftp, dll.).
 dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 **YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 """
-def generate_response(user_input):
-    """
-    Menghasilkan jawaban chatbot dengan mempertimbangkan data dashboard.
-    """
-    dashboard_data = get_dashboard_data()
-    
-    # Jika terjadi error saat mengambil data, kembalikan error tersebut
-    if "error" in dashboard_data:
-        return f"⚠️ Error fetching dashboard data: {dashboard_data['error']}"
+def generate_response(user_input, dashboard_data):
+    """Gunakan data dashboard PostgreSQL untuk memberikan jawaban yang lebih kontekstual."""
+    if dashboard_data is None or dashboard_data.empty:
+        return "⚠️ Data dashboard tidak ditemukan atau kosong."
 
-    # Tambahkan data dashboard ke dalam prompt
-    dashboard_context = json.dumps(dashboard_data, indent=2)
-    full_prompt = BASE_PROMPT + f"\n\nUser: {user_input}"
+    dashboard_context = dashboard_data.to_json(orient="records", indent=2)
+    prompt = f"FDIA Detection System Chatbot:\nUser: {user_input}\n\n{dashboard_context}"
 
     try:
-        response = model.generate_content(full_prompt, stream=True)
+        response = model.generate_content(prompt, stream=True)
         return "".join(res.text for res in response)
     except Exception as e:
-        return f"❌ Error saat memproses jawaban: {str(e)}"
+        return f"❌ Error processing response: {str(e)}"
+
         
 # Generate a response
 def generate_response(user_input, dashboard_data):
