@@ -10,6 +10,14 @@ from flask import Flask, request, jsonify
 import psycopg2
 import pandas as pd  
 
+st.markdown(
+    """
+    <style>
+        .css-1v3fvcr {display: none;}  /* CSS untuk menyembunyikan badge 'Hosted with Streamlit' */
+    </style>
+    """, unsafe_allow_html=True
+)
+
 
 # Load environment variables
 load_dotenv()
