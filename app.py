@@ -120,7 +120,9 @@ def get_hasilprediksi_data():
         return None
 
 def generate_sql_query(user_input):
-    """Gunakan model NLP untuk mengubah teks natural menjadi SQL Query yang hanya menggunakan SELECT."""
+    """Mengubah teks natural menjadi query SQL. 
+    Hanya mengizinkan query SELECT, COUNT, FILTER, GROUP BY, dll., tetapi MENOLAK INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
+    """
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
@@ -128,7 +130,13 @@ def generate_sql_query(user_input):
 
     prompt = f"""
     Anda adalah AI yang mengubah teks natural menjadi SQL Query.
-    **Pastikan hanya menghasilkan query dengan SELECT dan tidak menggunakan INSERT, UPDATE, DELETE, ALTER, DROP, TRUNCATE.**
+    **Pastikan query TIDAK menggunakan INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.**
+    Query yang diperbolehkan:
+    - SELECT (mengambil data)
+    - COUNT (menghitung jumlah data)
+    - GROUP BY (mengelompokkan data)
+    - ORDER BY (mengurutkan data)
+    - WHERE (memfilter data)
     
     Berikut adalah skema tabel `hasilprediksi`:
     {schema_context}
@@ -136,32 +144,32 @@ def generate_sql_query(user_input):
     Buat query SQL yang sesuai untuk permintaan berikut:
     "{user_input}"
 
-    **Hanya berikan query SELECT tanpa penjelasan tambahan. Jangan sertakan karakter non-SQL.**
+    **Hanya berikan query SQL tanpa penjelasan tambahan. Jangan sertakan karakter non-SQL.**
     """
 
     try:
         response = model.generate_content(prompt, stream=False)
         sql_query = response.text.strip()
 
-        # Validasi: Pastikan query hanya menggunakan SELECT
-        if not sql_query.lower().startswith("select"):
-            return "❌ Query tidak diizinkan. Hanya query SELECT yang dapat dieksekusi."
-
-        if "hasilprediksi" not in sql_query.lower():
-            return "❌ Query harus hanya menggunakan tabel `hasilprediksi`."
+        # Cegah query yang mengubah data (INSERT, UPDATE, DELETE, dll.)
+        forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
+        if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
+            return "❌ Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
 
         return sql_query
 
     except Exception as e:
         return f"❌ Error processing SQL query: {str(e)}"
 
+
 def execute_sql_query(sql_query):
-    """Eksekusi SQL Query yang diberikan hanya jika query menggunakan SELECT."""
+    """Eksekusi SQL Query yang diberikan, tetapi menolak query INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE."""
     if not sql_query or sql_query.startswith("❌"):
         return "❌ Query tidak valid, eksekusi dibatalkan."
 
-    if not sql_query.lower().startswith("select"):
-        return "❌ Hanya query SELECT yang diizinkan."
+    forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
+    if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
+        return "❌ Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
 
     try:
         conn = psycopg2.connect(
@@ -529,6 +537,7 @@ def handle_send():
         st.session_state["input_text"] = ""  
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
+
 
 
 # Handle clear button click
