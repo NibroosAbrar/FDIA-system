@@ -167,7 +167,7 @@ def generate_sql_query(user_input):
 
 
 def execute_sql_query(sql_query):
-    """Eksekusi SQL Query yang diberikan, tetapi menolak query INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE."""
+    """Eksekusi SQL Query yang diberikan dan kembalikan hasil dalam format teks."""
     if not sql_query or sql_query.startswith("❌"):
         return "❌ Query tidak valid, eksekusi dibatalkan."
 
@@ -187,13 +187,18 @@ def execute_sql_query(sql_query):
         with conn.cursor() as cur:
             cur.execute(sql_query)
 
-            # Ambil hasil query dan buat dataframe
+            # Ambil nama kolom
             columns = [desc[0] for desc in cur.description]
             rows = cur.fetchall()
-            df = pd.DataFrame(rows, columns=columns)
-            
+        
         conn.close()
-        return df  # Kembalikan dataframe agar bisa ditampilkan dalam tabel
+
+        # Konversi hasil ke format teks
+        if not rows:
+            return "✅ Query berhasil dijalankan, tetapi tidak ada data yang ditemukan."
+
+        result_text = "\n".join([", ".join(map(str, row)) for row in rows])
+        return f"✅ Hasil Query:\n\n{result_text}"
 
     except Exception as e:
         return f"❌ Error executing query: {str(e)}"
@@ -502,7 +507,7 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """Menangani input pengguna dan memberikan hasil query yang sesuai."""
+    """Menangani input pengguna dan memberikan hasil query sebagai teks."""
     user_text = st.session_state["input_text"]
 
     if user_text.strip():
@@ -523,15 +528,7 @@ def handle_send():
             return  # Jangan lanjutkan eksekusi jika query tidak valid
 
         # **Jalankan query SQL**
-        result = execute_sql_query(sql_query)
-
-        # **Format hasil output**
-        if isinstance(result, str):  # Jika hasil adalah pesan error, tampilkan sebagai teks
-            ai_response = result
-        else:  # Jika hasil adalah dataframe, tampilkan dalam tabel
-            st.write("📊 **Hasil Query:**")
-            st.dataframe(result)  # Menampilkan hasil query sebagai tabel
-            ai_response = "✅ Query berhasil dijalankan dan hasil ditampilkan di atas."
+        ai_response = execute_sql_query(sql_query)
 
         # **Simpan hasil dalam chat history**
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
@@ -539,6 +536,7 @@ def handle_send():
 
         # **Kosongkan input setelah mengirim**
         st.session_state["input_text"] = ""  
+
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
 
