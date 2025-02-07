@@ -209,7 +209,7 @@ dashboard_html = f"""
                 mountPoint: document.getElementById("superset-container"),
                 fetchGuestToken: async () => guest_token,
                 dashboardUiConfig: {{
-                    hideTitle: true,
+                    hideTitle: false,
                     filters: {{ expanded: false, visible: true }}
                 }}
             }});
