@@ -174,20 +174,24 @@ def generate_sql_query(user_input):
 
     prompt = f"""
     Anda adalah AI yang mengubah teks natural menjadi SQL Query.
-    **Pastikan query TIDAK menggunakan INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.**
+    **Pastikan query hanya menggunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
     Query yang diperbolehkan:
     - SELECT (mengambil data)
     - COUNT (menghitung jumlah data)
     - GROUP BY (mengelompokkan data)
     - ORDER BY (mengurutkan data)
     - WHERE (memfilter data)
-
+    
     Berikut adalah skema tabel `hasilprediksi`:
     {schema_context}
-
-    Buat query SQL yang sesuai untuk permintaan berikut:
+    
+    Contoh mapping input ke query:
+    - "Berapa total attack?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Attack';`
+    - "Ada berapa natural?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Natural';`
+    
+    Sekarang buat query SQL yang sesuai untuk permintaan ini:
     "{user_input}"
-
+    
     **Hanya berikan query SQL tanpa format Markdown (tidak ada tanda ```sql atau ```).**
     """
 
@@ -561,17 +565,20 @@ def handle_send():
 
         if st.session_state["db_schema"] is None:
             st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
-            return
+            return  # ✅ Posisikan return di dalam fungsi
 
         # **Cek apakah input perlu diproses sebagai query SQL**
         if is_sql_query(user_text):
             # Buat query SQL
             sql_query = generate_sql_query(user_text)
 
+            # Debug: tampilkan query sebelum dieksekusi
+            st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
+
             # **Cek apakah query valid sebelum dieksekusi**
             if sql_query.startswith("❌"):
                 st.warning(sql_query)  # Tampilkan pesan error
-                return  # Jangan lanjutkan eksekusi jika query tidak valid
+                return  # ✅ Posisikan return di dalam fungsi
 
             # **Jalankan query SQL**
             ai_response = execute_sql_query(sql_query)
