@@ -164,7 +164,7 @@ def generate_sql_query(user_input):
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
-    schema_context = st.session_state["db_schema"].to_json(orient="records", indent=2)
+    schema_context = json.dumps(st.session_state["db_schema"], indent=2)
 
     prompt = f"""
     Anda adalah AI yang mengubah teks natural menjadi SQL Query.
@@ -191,7 +191,7 @@ def generate_sql_query(user_input):
 
     try:
         response = model.generate_content(prompt, stream=False)
-        sql_query = response.text.strip()
+        y = response.text.strip()
 
         # Hapus tanda ```sql atau ``` yang mungkin muncul
         sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
