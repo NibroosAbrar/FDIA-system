@@ -281,18 +281,6 @@ def is_identity_question(user_input):
     ]
     return any(keyword in user_input.lower() for keyword in identity_keywords)
 
-def is_database_feature(user_input):
-    """Deteksi apakah pertanyaan mengandung fitur dari database hasilprediksi."""
-    fitur_database = [
-        "id", "http_response_body_len", "dst_port", "dns_rcode", "dns_qclass", "dns_qtype", 
-        "src_port", "http_resp_mime_types", "http_request_body_len", "conn_state", 
-        "http_user_agent", "ssl_issuer", "ssl_subject", "http_orig_mime_types", 
-        "http_trans_depth", "http_method", "http_status_code", "http_version", 
-        "http_uri", "ssl_cipher", "ssl_version", "ssl_resumed", "ssl_established", 
-        "proto", "dns_rejected", "dns_RA", "dns_RD", "dns_AA", "service", 
-        "dns_query", "dst_ip_bytes"
-    ]
-    return any(fitur in user_input.lower() for fitur in fitur_database)
 
 def is_sql_query(user_input):
     """Deteksi apakah input pengguna adalah pertanyaan SQL atau tidak."""
