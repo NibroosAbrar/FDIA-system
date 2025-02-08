@@ -510,6 +510,7 @@ service → Jenis layanan jaringan yang terdeteksi (http, dns, ftp, dll.).
 dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 **YANG TERPENTING BERIKAN JAWABAN YANG PASTI (TIDAK ADA KATA MUNGKIN, BISA JADI, KAYAKNYA, ATAUPUN KATA LAIN YANG RAGU-RAGU, HINDARI KATA-KATA ITU)**
 **id di postgres hanya menunjukkan data unique saja tidak ada makna**
+**Atur message atau prompt sql_query based on database**
 """
 
 def generate_response(user_input, database_data):
