@@ -157,6 +157,21 @@ def is_sql_query(user_input):
     # Cek apakah input mengandung kata-kata terkait SQL
     return any(word in user_input.lower() for word in sql_keywords)
 
+def is_database_feature(user_input):
+    """Deteksi apakah pertanyaan mengandung fitur dari database hasilprediksi."""
+    fitur_database = [
+        "id", "http_response_body_len", "dst_port", "dns_rcode", "dns_qclass", "dns_qtype", 
+        "src_port", "http_resp_mime_types", "http_request_body_len", "conn_state", 
+        "http_user_agent", "ssl_issuer", "ssl_subject", "http_orig_mime_types", 
+        "http_trans_depth", "http_method", "http_status_code", "http_version", 
+        "http_uri", "ssl_cipher", "ssl_version", "ssl_resumed", "ssl_established", 
+        "proto", "dns_rejected", "dns_RA", "dns_RD", "dns_AA", "service", 
+        "dns_query", "dst_ip_bytes"
+    ]
+    
+    return any(fitur in user_input.lower() for fitur in fitur_database)
+
+
 def generate_sql_query(user_input):
     """Mengubah teks natural menjadi query SQL yang valid."""
     
@@ -553,51 +568,33 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """Menangani input pengguna, baik sebagai pertanyaan SQL atau pertanyaan umum."""
+    """Menangani input pengguna dan memutuskan apakah pertanyaan perlu data dari database atau tidak."""
     user_text = st.session_state["input_text"]
 
     if user_text.strip():
         # **Pastikan skema database tersedia**
-        if "db_schema" not in st.session_state:
+        if "db_schema" not in st.session_state or not st.session_state["db_schema"]:
             st.session_state["db_schema"] = get_database_schema()
 
-        if st.session_state["db_schema"] is None:
+        if not st.session_state["db_schema"]:
             st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
-            return  # ✅ Posisikan return di dalam fungsi
+            return  # ✅ Stop eksekusi jika skema tidak tersedia
 
-        if is_sql_query(user_text):
-            sql_query = ""  # ✅ Inisialisasi sql_query agar tidak kosong
-        
-            try:
-                # Buat query SQL
-                sql_query = generate_sql_query(user_text)
-        
-                # Jika terjadi error saat pembuatan query, tangani di sini
-                if not sql_query or sql_query.startswith("❌"):
-                    st.warning(f"❌ Query tidak valid: {sql_query}")
-                    return  # Stop eksekusi jika query salah
-        
-                # Debugging: tampilkan query sebelum dieksekusi
-                st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
-        
-                # **Jalankan query SQL**
-                ai_response = execute_sql_query(sql_query)
-        
-            except Exception as e:
-                st.error(f"❌ Error processing SQL query: {str(e)}")
-                return
+        # **Cek apakah pertanyaan mengandung fitur database**
+        if is_database_feature(user_text):
+            sql_query = generate_sql_query(user_text)
 
+            if not sql_query or sql_query.startswith("❌"):
+                st.warning(f"❌ Query tidak valid: {sql_query}")
+                return  # Stop eksekusi jika query salah
 
-
-            # **Cek apakah query valid sebelum dieksekusi**
-            if sql_query.startswith("❌"):
-                st.warning(sql_query)  # Tampilkan pesan error
-                return  # ✅ Posisikan return di dalam fungsi
+            st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
 
             # **Jalankan query SQL**
             ai_response = execute_sql_query(sql_query)
+
         else:
-            # **Jika bukan SQL, gunakan model AI untuk menjawab pertanyaan**
+            # **Gunakan model AI untuk menjawab pertanyaan umum**
             ai_response = model.generate_content(user_text).text.strip()
 
         # **Simpan hasil dalam chat history**
@@ -609,7 +606,6 @@ def handle_send():
 
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
-
 
 
 # Handle clear button click
