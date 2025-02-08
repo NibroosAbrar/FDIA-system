@@ -249,7 +249,7 @@ def get_database_schema():
         return st.session_state["db_schema"]
 
     except Exception as e:
-        st.error(f"❌ Error fetching database schema: {e}")
+        st.error(f"Error fetching database schema: {e}")
         return None
 
 
@@ -269,7 +269,7 @@ def get_hasilprediksi_data():
         conn.close()
         return df
     except Exception as e:
-        st.error(f"❌ Error fetching database data: {e}")
+        st.error(f"Error fetching database data: {e}")
         return None
 
 def is_identity_question(user_input):
@@ -498,7 +498,7 @@ def store_token():
     data = request.get_json()
 
     # Debugging untuk melihat data yang diterima
-    print("🔍 Data token diterima:", data)
+    print("Data token diterima:", data)
 
     if not data or "token" not in data:
         return jsonify({"error": "Token missing"}), 400
@@ -556,13 +556,13 @@ def handle_send():
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
         return  # **Hentikan eksekusi jika input kosong**
 
-    # 📌 **Cek apakah pengguna bertanya tentang identitas chatbot terlebih dahulu**
+    # **Cek apakah pengguna bertanya tentang identitas chatbot terlebih dahulu**
     if is_identity_question(user_text):
         ai_response = (
-            "🔹 **Saya adalah Sigma AI**, asisten kecerdasan buatan yang dirancang untuk membantu dalam "
+            "Saya adalah Sigma AI, asisten kecerdasan buatan yang dirancang untuk membantu dalam "
             "**keamanan siber**, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** "
             "pada sistem **Industrial Internet of Things (IIoT)**. Saya dapat menjawab pertanyaan teknis, membantu analisis data, "
-            "dan memberikan saran mitigasi terhadap serangan FDIA. Silakan tanyakan apa yang Anda butuhkan! 🚀"
+            "dan memberikan saran mitigasi terhadap serangan FDIA. Silakan tanyakan apa yang Anda butuhkan!"
         )
         
         # **Simpan hasil dalam chat history**
@@ -573,15 +573,15 @@ def handle_send():
         st.session_state["input_text"] = ""
         return  # **Hentikan eksekusi di sini, agar tidak lanjut ke SQL atau AI model**
     
-    # 📌 **Cek apakah skema database tersedia**
+    # **Cek apakah skema database tersedia**
     if "db_schema" not in st.session_state:
         st.session_state["db_schema"] = get_database_schema()
 
     if st.session_state["db_schema"] is None:
-        st.warning("❌ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
+        st.warning("Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
         return  # **Hentikan eksekusi jika skema database tidak tersedia**
 
-    # 📌 **Cek apakah input adalah query SQL**
+    # **Cek apakah input adalah query SQL**
     if is_sql_query(user_text):
         sql_query = ""  # Inisialisasi sql_query agar tidak kosong
 
@@ -591,21 +591,21 @@ def handle_send():
 
             # **Cek validitas query sebelum dieksekusi**
             if not sql_query or sql_query.startswith("error"):
-                st.warning(f"❌ Query tidak valid: {sql_query}")
+                st.warning(f"Query tidak valid: {sql_query}")
                 return  # **Stop eksekusi jika query salah**
 
             # **Jalankan query SQL**
             ai_response = execute_sql_query(sql_query)
 
         except Exception as e:
-            st.error(f"❌ Error processing SQL query: {str(e)}")
+            st.error(f"Error processing SQL query: {str(e)}")
             return
         
     else:
-        # 📌 **Jika bukan SQL atau identitas, gunakan model AI untuk menjawab pertanyaan**
+        # **Jika bukan SQL atau identitas, gunakan model AI untuk menjawab pertanyaan**
         ai_response = model.generate_content(user_text).text.strip()
 
-    # 📌 **Simpan hasil dalam chat history**
+    # **Simpan hasil dalam chat history**
     st.session_state["chat_history"].append({"role": "user", "content": user_text})
     st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
