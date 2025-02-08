@@ -508,7 +508,7 @@ def store_token():
 
     return jsonify({"message": "Token stored successfully"}), 200
 
-def generate_response(user_input, identity input, database_data):
+def generate_response(user_input, database_data):
     """
     Menggunakan base prompt agar Sigma AI selalu menjawab berdasarkan informasi dari database 'hasilprediksi'.
     """
