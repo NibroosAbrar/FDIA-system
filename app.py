@@ -82,7 +82,7 @@ def login_to_superset():
         response.raise_for_status()  # Pastikan tidak error
 
         token = response.json().get("access_token")
-        
+
         if token:
             st.session_state["superset_token"] = token
         else:
@@ -142,18 +142,13 @@ def get_hasilprediksi_data():
             user=DB_USER,
             password=DB_PASSWORD
         )
-        query = "SELECT * FROM hasilprediksi;"  # ✅ Ambil contoh data
+        query = "SELECT * FROM hasilprediksi;"  # ✅ Ambil data dari tabel 'hasilprediksi'
         df = pd.read_sql_query(query, conn)
         conn.close()
-        
-        # **Debugging: Tampilkan hasil query**
-        st.write("✅ Database Connected! Sample Data:", df.head())
-
         return df
     except Exception as e:
         st.error(f"❌ Error fetching database data: {e}")
         return None
-
 
 def is_sql_query(user_input):
     """Deteksi apakah input pengguna adalah pertanyaan SQL atau tidak."""
@@ -162,23 +157,9 @@ def is_sql_query(user_input):
     # Cek apakah input mengandung kata-kata terkait SQL
     return any(word in user_input.lower() for word in sql_keywords)
 
-def is_database_feature(user_input):
-    """Deteksi apakah pertanyaan mengandung fitur dari database hasilprediksi."""
-    fitur_database = [
-        "id", "http_response_body_len", "dst_port", "dns_rcode", "dns_qclass", "dns_qtype", 
-        "src_port", "http_resp_mime_types", "http_request_body_len", "conn_state", 
-        "http_user_agent", "ssl_issuer", "ssl_subject", "http_orig_mime_types", 
-        "http_trans_depth", "http_method", "http_status_code", "http_version", 
-        "http_uri", "ssl_cipher", "ssl_version", "ssl_resumed", "ssl_established", 
-        "proto", "dns_rejected", "dns_RA", "dns_RD", "dns_AA", "service", 
-        "dns_query", "dst_ip_bytes"
-    ]
-    
-    return any(fitur in user_input.lower() for fitur in fitur_database)
-
-
 def generate_sql_query(user_input):
-    """Mengubah teks natural menjadi query SQL."""
+    """Mengubah teks natural menjadi query SQL yang valid."""
+
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
@@ -186,30 +167,45 @@ def generate_sql_query(user_input):
 
     prompt = f"""
     Anda adalah AI yang mengubah teks natural menjadi SQL Query.
-    **Hanya gunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
+    **Pastikan query hanya menggunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
+    Query yang diperbolehkan:
+    - SELECT (mengambil data)
+    - COUNT (menghitung jumlah data)
+    - GROUP BY (mengelompokkan data)
+    - ORDER BY (mengurutkan data)
+    - WHERE (memfilter data)
     
-    Berikut skema tabel `hasilprediksi`:
+    Berikut adalah skema tabel `hasilprediksi`:
     {schema_context}
     
-    Permintaan pengguna:
+    Contoh mapping input ke query:
+    - "Berapa total attack?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Attack';`
+    - "Ada berapa natural?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Natural';`
+    
+    Sekarang buat query SQL yang sesuai untuk permintaan ini:
     "{user_input}"
-
-    Buat query SQL yang sesuai (tanpa ```sql atau tanda kutip).
+    
+    **Hanya berikan query SQL tanpa format Markdown (tidak ada tanda ```sql atau ```).**
     """
 
     try:
         response = model.generate_content(prompt, stream=False)
         sql_query = response.text.strip()
 
-        # **Debugging: Cek hasil query**
-        st.write(f"🔍 Generated SQL Query: {sql_query}")
+        # Hapus tanda ```sql atau ``` yang mungkin muncul
+        sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
+
+        # Validasi query agar tidak kosong
+        if not sql_query:
+            return "❌ Error: Model tidak menghasilkan query yang valid."
 
         # Cegah query yang mengubah data
         forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
         if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
-            return "❌ Query tidak diizinkan."
+            return "❌ Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
 
         return sql_query
+
     except Exception as e:
         return f"❌ Error processing SQL query: {str(e)}"
 
@@ -239,7 +235,7 @@ def execute_sql_query(sql_query):
             # Ambil nama kolom
             columns = [desc[0] for desc in cur.description]
             rows = cur.fetchall()
-        
+
         conn.close()
 
         # Konversi hasil ke format teks
@@ -259,7 +255,6 @@ def execute_sql_query(sql_query):
 dashboard_html = f"""
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/@superset-ui/embedded-sdk"></script>
-
 <style>
     body, html {{
         margin: 0;
@@ -278,20 +273,16 @@ dashboard_html = f"""
         border: none;
     }}
 </style>
-
 <div id="superset-container"></div>
-
 <script>
     const supersetUrl = "{SUP_URL}";
     const supersetApiUrl = supersetUrl + "/api/v1/security";
     const dashboardId = "{DASHBOARD_ID}";
-
     async function authenticateAndEmbedDashboard() {{
         console.log("🔄 Refresh Detected: Clearing old token...");
         localStorage.removeItem("superset_token");  // Hapus token lama saat refresh
         
         let access_token = null;
-
         try {{
             console.log("🔍 Authenticating...");
             
@@ -303,19 +294,15 @@ dashboard_html = f"""
                 "refresh": true
             }};
             const login_headers = {{ headers: {{ "Content-Type": "application/json" }} }};
-
             let loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
             access_token = loginResponse.data["access_token"];
             localStorage.setItem("superset_token", access_token);
-
             console.log("✅ New Access Token:", access_token);
-
             // Kirim token ke parent (misalnya, Streamlit)
             if (access_token) {{
                 console.log("📡 Sending token to Streamlit...");
                 window.parent.postMessage({{ type: "TOKEN_UPDATE", token: access_token }}, "*");
             }}
-
             // **Dapatkan Guest Token untuk Embed Dashboard**
             const guest_token_body = {{
                 "resources": [{{ "type": "dashboard", "id": dashboardId }}],
@@ -326,18 +313,15 @@ dashboard_html = f"""
                     "last_name": "report-viewer"
                 }}
             }};
-
             const guest_token_headers = {{
                 headers: {{
                     "Content-Type": "application/json",
                     "Authorization": "Bearer " + access_token
                 }}
             }};
-
             let guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
             const guest_token = guestResponse.data["token"];
             console.log("✅ Guest Token received:", guest_token);
-
             // **Embed Dashboard**
             supersetEmbeddedSdk.embedDashboard({{
                 id: dashboardId,
@@ -349,7 +333,6 @@ dashboard_html = f"""
                     filters: {{ expanded: false, visible: true }}
                 }}
             }});
-
         }} catch (error) {{
             console.error("❌ Dashboard error:", error);
             if (error.response) {{
@@ -357,7 +340,6 @@ dashboard_html = f"""
             }}
         }}
     }}
-
     // Menangani permintaan token dari parent (misal, Streamlit)
     window.addEventListener("message", (event) => {{
         if (event.data.type === "REQUEST_TOKEN") {{
@@ -365,7 +347,6 @@ dashboard_html = f"""
             window.parent.postMessage({{ type: "TOKEN_UPDATE", token: stored_token }}, "*");
         }}
     }});
-
     // **Panggil fungsi autentikasi saat halaman dimuat**
     window.onload = authenticateAndEmbedDashboard;
 </script>
@@ -526,7 +507,7 @@ def generate_response(user_input, database_data):
 
     # Pastikan data hanya mengandung informasi yang relevan untuk chatbot
     kolom_yang_diperlukan = ["id", "marker"]
-    
+
     if not all(col in database_data.columns for col in kolom_yang_diperlukan):
         return "⚠️ Tabel hasilprediksi tidak memiliki struktur yang sesuai."
 
@@ -538,13 +519,9 @@ def generate_response(user_input, database_data):
     Berikut adalah struktur tabel:
     - id (integer) → ID unik untuk setiap prediksi.
     - membaca kolom marker untuk mengidentifikasi attack dan natural
-
     Anda harus menjawab pertanyaan pengguna berdasarkan data berikut:
-
     {database_context}
-
     Pertanyaan pengguna: {user_input}
-
     **Berikan jawaban yang akurat berdasarkan data, dan jangan berasumsi jika data tidak ditemukan.**
     """
 
@@ -557,36 +534,51 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """Menangani input pengguna, menentukan apakah query SQL diperlukan atau tidak."""
+    """Menangani input pengguna, baik sebagai pertanyaan SQL atau pertanyaan umum."""
     user_text = st.session_state["input_text"]
 
     if user_text.strip():
-        # **Pastikan database schema tersedia**
+        # **Pastikan skema database tersedia**
         if "db_schema" not in st.session_state:
             st.session_state["db_schema"] = get_database_schema()
 
         if st.session_state["db_schema"] is None:
-            st.warning("⚠️ Tidak dapat mengambil skema database.")
-            return
+            st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
+            return  # ✅ Posisikan return di dalam fungsi
 
-        # **Debugging: Tampilkan input yang diterima**
-        st.write(f"🔍 User Input: {user_text}")
+        if is_sql_query(user_text):
+            sql_query = ""  # ✅ Inisialisasi sql_query agar tidak kosong
 
-        # **Cek apakah pertanyaan terkait fitur database**
-        if is_database_feature(user_text):
-            sql_query = generate_sql_query(user_text)
+            try:
+                # Buat query SQL
+                sql_query = generate_sql_query(user_text)
 
-            if sql_query.startswith("❌"):
-                st.warning(sql_query)  # ✅ Jika query tidak valid, tampilkan error
+                # Jika terjadi error saat pembuatan query, tangani di sini
+                if not sql_query or sql_query.startswith("❌"):
+                    st.warning(f"❌ Query tidak valid: {sql_query}")
+                    return  # Stop eksekusi jika query salah
+
+                # Debugging: tampilkan query sebelum dieksekusi
+                st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
+
+                # **Jalankan query SQL**
+                ai_response = execute_sql_query(sql_query)
+
+            except Exception as e:
+                st.error(f"❌ Error processing SQL query: {str(e)}")
                 return
 
-            # **Debugging: Lihat query SQL yang dibuat**
-            st.write(f"🧐 Query yang akan dijalankan: {sql_query}")
+
+
+            # **Cek apakah query valid sebelum dieksekusi**
+            if sql_query.startswith("❌"):
+                st.warning(sql_query)  # Tampilkan pesan error
+                return  # ✅ Posisikan return di dalam fungsi
 
             # **Jalankan query SQL**
             ai_response = execute_sql_query(sql_query)
         else:
-            # **Jawab dengan model AI jika tidak terkait database**
+            # **Jika bukan SQL, gunakan model AI untuk menjawab pertanyaan**
             ai_response = model.generate_content(user_text).text.strip()
 
         # **Simpan hasil dalam chat history**
@@ -594,7 +586,7 @@ def handle_send():
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
         # **Kosongkan input setelah mengirim**
-        st.session_state["input_text"] = ""
+        st.session_state["input_text"] = ""  
 
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
