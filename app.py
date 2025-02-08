@@ -514,6 +514,8 @@ def generate_response(user_input, database_data):
 
     # Perbaikan Prompt untuk lebih kontekstual
     prompt = f"""
+    **Nama Chatbot**: Sigma AI  
+    **Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**. 
     Anda adalah chatbot AI yang membaca data prediksi dari tabel 'hasilprediksi' di PostgreSQL.
     Berikut adalah struktur tabel:
     - id (integer) → ID unik untuk setiap prediksi.
