@@ -562,16 +562,16 @@ def handle_send():
             return  # ✅ Posisikan return di dalam fungsi
 
         if is_sql_query(user_text):
-            sql_query = ""  # ✅ Inisialisasi variabel terlebih dahulu
+            sql_query = ""  # ✅ Inisialisasi sql_query agar tidak kosong
         
             try:
                 # Buat query SQL
                 sql_query = generate_sql_query(user_text)
         
-                # Cek jika terjadi error saat pembuatan query
-                if sql_query.startswith("❌"):
-                    st.warning(sql_query)
-                    return
+                # Jika terjadi error saat pembuatan query, tangani di sini
+                if not sql_query or sql_query.startswith("❌"):
+                    st.warning(f"❌ Query tidak valid: {sql_query}")
+                    return  # Stop eksekusi jika query salah
         
                 # Debugging: tampilkan query sebelum dieksekusi
                 st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
@@ -582,6 +582,7 @@ def handle_send():
             except Exception as e:
                 st.error(f"❌ Error processing SQL query: {str(e)}")
                 return
+
 
 
             # **Cek apakah query valid sebelum dieksekusi**
