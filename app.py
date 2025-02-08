@@ -379,6 +379,8 @@ def store_token():
 
 # Define a detailed base prompt
 BASE_PROMPT = """
+**Nama Chatbot**: Sigma AI  
+**Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**. 
 **Tugas Utama**:  
 1. **Menjawab pertanyaan teknis** tentang **FDIA, IIoT, dan keterkaitannya.  
 2. **Menjelaskan fitur dan fungsi platform Sigma Boys** jika diminta.  
@@ -499,38 +501,41 @@ dst_ip_bytes → Jumlah byte yang dikirim ke IP tujuan.
 
 def generate_response(user_input, database_data):
     """
-    Gunakan data dari tabel 'hasilprediksi' untuk memberikan jawaban yang lebih akurat.
+    Menggunakan base prompt agar Sigma AI selalu menjawab berdasarkan informasi dari database 'hasilprediksi'.
     """
+
     if database_data is None or database_data.empty:
         return "Tidak ada data yang tersedia dalam tabel 'hasilprediksi'."
 
-    # Pastikan data hanya mengandung informasi yang relevan untuk chatbot
     kolom_yang_diperlukan = ["id", "marker"]
-
     if not all(col in database_data.columns for col in kolom_yang_diperlukan):
         return "Tabel hasilprediksi tidak memiliki struktur yang sesuai."
 
     database_context = database_data[kolom_yang_diperlukan].to_json(orient="records", indent=2)
 
-    # Perbaikan Prompt untuk lebih kontekstual
-    prompt = f"""
-    **Nama Chatbot**: Sigma AI  
-    **Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**. 
-    Anda adalah chatbot AI yang membaca data prediksi dari tabel 'hasilprediksi' di PostgreSQL.
-    Berikut adalah struktur tabel:
-    - id (integer) → ID unik untuk setiap prediksi.
-    - membaca kolom marker untuk mengidentifikasi attack dan natural
-    Anda harus menjawab pertanyaan pengguna berdasarkan data berikut:
+    # Gabungkan base prompt dengan input pengguna
+    full_prompt = f"""
+    {BASE_PROMPT}
+
+    **Data Hasil Prediksi yang Ada**:
     {database_context}
-    Pertanyaan pengguna: {user_input}
-    **Berikan jawaban yang akurat berdasarkan data, dan jangan berasumsi jika data tidak ditemukan.**
+
+    **Pertanyaan Pengguna**:
+    "{user_input}"
+
+    **Jawaban yang Harus Diberikan**:
+    - Harus berdasarkan data yang tersedia.
+    - Jika data tidak ditemukan, jawab secara eksplisit.
+    - Jangan berasumsi jika tidak ada data terkait.
     """
 
     try:
-        response = model.generate_content(prompt, stream=True)
-        return "".join(res.text for res in response)
+        response = model.generate_content(full_prompt, stream=False)
+        return response.text.strip()
+
     except Exception as e:
         return f"Error processing response: {str(e)}"
+
 
 
 # Handle send button click
