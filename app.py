@@ -65,7 +65,7 @@ try:
     st.session_state["superset_token"] = access_token
 
 except requests.exceptions.RequestException as e:
-    print(f"❌ Error saat login: {e}")
+    print(f"Error saat login: {e}")
 
 def login_to_superset():
     """Login ke Superset API dan simpan token di session_state."""
@@ -86,10 +86,10 @@ def login_to_superset():
         if token:
             st.session_state["superset_token"] = token
         else:
-            st.error("❌ Token tidak ditemukan dalam respons API.")
+            st.error("Token tidak ditemukan dalam respons API.")
 
     except requests.exceptions.RequestException as e:
-        st.error(f"❌ Error saat login Superset: {e}")
+        st.error(f"Error saat login Superset: {e}")
 
 # Panggil fungsi login sebelum mengambil data dashboard
 login_to_superset()
@@ -103,7 +103,7 @@ DB_PASSWORD = "uxeacaiheedeNgeebiveighetao9Eica"
 
 
 
-# 4️⃣ Fungsi untuk mendapatkan skema database (schema tables)
+# Fungsi untuk mendapatkan skema database (schema tables)
 def get_database_schema():
     """Mengambil informasi seluruh tabel dan kolom dari database PostgreSQL."""
     try:
@@ -142,7 +142,7 @@ def get_hasilprediksi_data():
             user=DB_USER,
             password=DB_PASSWORD
         )
-        query = "SELECT * FROM hasilprediksi;"  # ✅ Ambil data dari tabel 'hasilprediksi'
+        query = "SELECT * FROM hasilprediksi;"  # Ambil data dari tabel 'hasilprediksi'
         df = pd.read_sql_query(query, conn)
         conn.close()
         return df
@@ -197,28 +197,28 @@ def generate_sql_query(user_input):
 
         # Validasi query agar tidak kosong
         if not sql_query:
-            return "❌ Error: Model tidak menghasilkan query yang valid."
+            return "Error: Model tidak menghasilkan query yang valid."
 
         # Cegah query yang mengubah data
         forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
         if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
-            return "❌ Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
+            return "Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
 
         return sql_query
 
     except Exception as e:
-        return f"❌ Error processing SQL query: {str(e)}"
+        return f"Error processing SQL query: {str(e)}"
 
 
 
 def execute_sql_query(sql_query):
     """Eksekusi SQL Query yang diberikan dan kembalikan hasil dalam format teks."""
-    if not sql_query or sql_query.startswith("❌"):
-        return "❌ Query tidak valid, eksekusi dibatalkan."
+    if not sql_query or sql_query.startswith("error"):
+        return "Query tidak valid, eksekusi dibatalkan."
 
     forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
     if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
-        return "❌ Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
+        return "Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
 
     try:
         conn = psycopg2.connect(
@@ -240,13 +240,13 @@ def execute_sql_query(sql_query):
 
         # Konversi hasil ke format teks
         if not rows:
-            return "✅ Query berhasil dijalankan, tetapi tidak ada data yang ditemukan."
+            return "Query berhasil dijalankan, tetapi tidak ada data yang ditemukan."
 
         result_text = "\n".join([", ".join(map(str, row)) for row in rows])
         return f"{result_text}"
 
     except Exception as e:
-        return f"❌ Error executing query: {str(e)}"
+        return f"Error executing query: {str(e)}"
 
 
 
@@ -279,12 +279,12 @@ dashboard_html = f"""
     const supersetApiUrl = supersetUrl + "/api/v1/security";
     const dashboardId = "{DASHBOARD_ID}";
     async function authenticateAndEmbedDashboard() {{
-        console.log("🔄 Refresh Detected: Clearing old token...");
+        console.log("Refresh Detected: Clearing old token...");
         localStorage.removeItem("superset_token");  // Hapus token lama saat refresh
         
         let access_token = null;
         try {{
-            console.log("🔍 Authenticating...");
+            console.log("Authenticating...");
             
             // Lakukan login ulang untuk mendapatkan token baru
             const login_body = {{
@@ -297,7 +297,7 @@ dashboard_html = f"""
             let loginResponse = await axios.post(supersetApiUrl + "/login", login_body, login_headers);
             access_token = loginResponse.data["access_token"];
             localStorage.setItem("superset_token", access_token);
-            console.log("✅ New Access Token:", access_token);
+            console.log("New Access Token:", access_token);
             // Kirim token ke parent (misalnya, Streamlit)
             if (access_token) {{
                 console.log("📡 Sending token to Streamlit...");
@@ -321,7 +321,7 @@ dashboard_html = f"""
             }};
             let guestResponse = await axios.post(supersetApiUrl + "/guest_token/", guest_token_body, guest_token_headers);
             const guest_token = guestResponse.data["token"];
-            console.log("✅ Guest Token received:", guest_token);
+            console.log("Guest Token received:", guest_token);
             // **Embed Dashboard**
             supersetEmbeddedSdk.embedDashboard({{
                 id: dashboardId,
@@ -334,7 +334,7 @@ dashboard_html = f"""
                 }}
             }});
         }} catch (error) {{
-            console.error("❌ Dashboard error:", error);
+            console.error("Dashboard error:", error);
             if (error.response) {{
                 console.log("Error Response Data:", error.response.data);
             }}
@@ -371,16 +371,16 @@ def store_token():
         return jsonify({"error": "Token missing"}), 400
 
     st.session_state["superset_token"] = data["token"]
-    print("✅ Token berhasil disimpan:", st.session_state["superset_token"])
+    print("Token berhasil disimpan:", st.session_state["superset_token"])
 
     return jsonify({"message": "Token stored successfully"}), 200
 
 # Define a detailed base prompt
 BASE_PROMPT = """
 {json.dumps(dashboard_data, indent=2)}
-📌 **Nama Chatbot**: Sigma AI  
-📌 **Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**.  
-📌 **Tugas Utama**:  
+**Nama Chatbot**: Sigma AI  
+**Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**.  
+**Tugas Utama**:  
 1. **Menjawab pertanyaan teknis** tentang **FDIA, IIoT, dan keterkaitannya.  
 2. **Menjelaskan fitur dan fungsi platform Sigma Boys** jika diminta.  
 3. **Memahami dan menjelaskan fitur utama yang tersedia dalam sistem deteksi FDIA**, termasuk:  
@@ -392,25 +392,25 @@ BASE_PROMPT = """
 6. **Menjawab pertanyaan umum yang tidak terkait dengan platform secara akurat dan sopan**.  
 7. **Menggunakan bahasa fleksibel** (bisa formal, teknis, atau santai, tergantung gaya pengguna).  
 8. **Menjaga kerahasiaan informasi penting** (misal, Google Application Credentials, akun, API, SDK, atau password).  
-📊 **Kemampuan Membaca dan Menjelaskan Data Visualisasi**  
+**Kemampuan Membaca dan Menjelaskan Data Visualisasi**  
 - Bisa menjelaskan **grafik anomali**, **heatmap serangan**, **tren FDIA dalam IIoT**, dan sebagainya.  
 - Bisa membaca **dashboard monitoring**, menjelaskan **alert**, dan memberikan **saran mitigasi**.  
 - Mampu membedakan **false positive vs. true positive** dalam deteksi serangan.  
-🛡️ **Kemampuan Memberikan Mitigasi FDIA di IIoT**  
+**Kemampuan Memberikan Mitigasi FDIA di IIoT**  
 - Memberikan rekomendasi **firewall rules, IDS/IPS tuning, segmentasi jaringan**, dan **model machine learning** yang lebih akurat.  
 - Memahami bagaimana **serangan FDIA bekerja di sistem IIoT**, termasuk dampaknya ke sensor, aktuator, dan pengambilan keputusan.  
 - Dapat **menganalisis pola serangan berdasarkan log jaringan** dan mendeteksi **indikator kompromi (IoC)**.  
-⚡ **Responsif & Fleksibel**  
+**Responsif & Fleksibel**  
 - Bisa berbicara dengan gaya **formal, teknis, santai formal**, tergantung cara komunikasi pengguna.  
 - Tidak terlalu sering menyebut **Sigma Boys** atau **Sigma AI**, kecuali jika diminta untuk memperkenalkan platform.  
 - Tidak membagikan **informasi rahasia atau sensitif**.  
-📌 Peran: Chatbot yang dapat menjelaskan 31 fitur utama dalam log jaringan, membantu analisis serangan FDIA, serta menafsirkan data transformasi dalam sistem deteksi anomali.
-📌 Kemampuan Utama:
+Peran: Chatbot yang dapat menjelaskan 31 fitur utama dalam log jaringan, membantu analisis serangan FDIA, serta menafsirkan data transformasi dalam sistem deteksi anomali.
+Kemampuan Utama:
 Memahami nilai asli vs. nilai transformasi dalam dataset deteksi FDIA.
 Menjelaskan metode normalisasi (Min-Max Scaling, Z-Score) yang digunakan untuk mengubah data mentah menjadi bentuk yang bisa diproses oleh machine learning.
 Mengembalikan nilai yang sudah dinormalisasi ke bentuk aslinya (denormalisasi).
 Menjelaskan cara kerja setiap fitur dalam log jaringan dan bagaimana fitur tersebut digunakan untuk mendeteksi serangan.
-📌 Penjelasan Fitur Utama dalam Log Jaringan:
+Penjelasan Fitur Utama dalam Log Jaringan:
 dst_port (Port Tujuan) – Nomor port tujuan komunikasi jaringan.
 src_port (Port Sumber) – Nomor port yang digunakan oleh pengirim paket.
 dns_rcode (DNS Response Code) – Kode status dari permintaan DNS.
@@ -424,42 +424,42 @@ service – Jenis layanan yang terdeteksi dalam komunikasi jaringan.
 proto (Protocol) – Protokol jaringan yang digunakan (TCP, UDP, ICMP).
 dns_rejected – Apakah permintaan DNS ditolak oleh server.
 Peran: Chatbot ini dapat membaca dan menjelaskan grafik, chart, heatmap, dan tren yang muncul di dashboard Sigma Boys untuk mendeteksi FDIA dalam IIoT.
-📌 Kemampuan Utama:
+Kemampuan Utama:
 Menganalisis heatmap serangan untuk melihat pola FDIA dalam waktu tertentu.
 Membaca trend anomaly detection dan menjelaskan false positive vs. true positive.
 Menjelaskan spike atau lonjakan data mencurigakan dalam grafik monitoring.
-📌 Contoh Analisis Grafik:
-❓ User: "Di dashboard ada grafik lonjakan di dns_query, artinya apa?"
-✅ Chatbot: "Kalau ada lonjakan mendadak di dns_query, bisa jadi ada domain generation algorithm (DGA) attack dari malware yang mencoba berkomunikasi dengan C2 Server. Cek domain yang sering muncul di log DNS!"
+Contoh Analisis Grafik:
+User: "Di dashboard ada grafik lonjakan di dns_query, artinya apa?"
+Chatbot: "Kalau ada lonjakan mendadak di dns_query, bisa jadi ada domain generation algorithm (DGA) attack dari malware yang mencoba berkomunikasi dengan C2 Server. Cek domain yang sering muncul di log DNS!"
 Peran: Chatbot yang memberikan langkah mitigasi jika ditemukan serangan FDIA dalam sistem IIoT.
-📌 Kemampuan Utama:
+Kemampuan Utama:
 Menganalisis log jaringan untuk menemukan indikasi serangan.
 Menyarankan aturan firewall dan IDS untuk memblokir serangan.
 Memberikan strategi penerapan machine learning untuk mendeteksi FDIA lebih akurat.
 Menjelaskan dampak FDIA terhadap sistem sensor dan kontrol IIoT.
-📌 Contoh Respon Mitigasi:
-❓ User: "Gimana cara mencegah FDIA di sensor tekanan industri?"
-✅ Chatbot:
+Contoh Respon Mitigasi:
+User: "Gimana cara mencegah FDIA di sensor tekanan industri?"
+Chatbot:
 Gunakan validasi data berbasis ML – Latih model untuk mendeteksi anomali dalam pembacaan sensor.
 Terapkan checksum & enkripsi – Pastikan data sensor dienkripsi agar tidak mudah dipalsukan.
 Gunakan timestamping & nonce – Setiap data harus punya tanda waktu agar tidak bisa digunakan ulang oleh attacker.
 eran: Chatbot yang dapat membantu menganalisis serangan berdasarkan log dan metadata jaringan.
-📌 Kemampuan Utama:
+Kemampuan Utama:
 Menggunakan fitur-fitur log jaringan yang tersedia untuk menganalisis pola serangan.
 Menghubungkan aktivitas mencurigakan dengan teknik eksploitasi yang dikenal.
 Menyarankan tools forensik jaringan seperti Zeek, Suricata, dan Wireshark.
-📌 Contoh Investigasi:
-❓ User: "Gue lihat ada lonjakan koneksi dari IP asing dengan conn_state aneh, itu tanda apa?"
-✅ Chatbot:
+Contoh Investigasi:
+User: "Gue lihat ada lonjakan koneksi dari IP asing dengan conn_state aneh, itu tanda apa?"
+Chatbot:
 Jika conn_state = S0, bisa jadi port scanning.
 Jika conn_state = RSTO, mungkin ada upaya brute force yang gagal.
 Jika http_request_body_len besar, mungkin ada upaya data exfiltration.
-🚨 Rekomendasi:
+Rekomendasi:
 Blokir IP mencurigakan di firewall.
 Cek log lebih lanjut di SIEM atau packet capture.
 Gunakan aturan IDS/IPS untuk mendeteksi pola serangan.
-📌 Daftar 30 Fitur utama dalam Log Jaringan (FDIA Detection System) (**DAFTAR INI ADALAH FITUR UTAMA, TETAPI ADA KEMUNGKINAN ADA FITUR LAIN YANG BELUM DISEBUTKAN**)
-1️⃣ HTTP (Hypertext Transfer Protocol)
+Daftar 30 Fitur utama dalam Log Jaringan (FDIA Detection System) (**DAFTAR INI ADALAH FITUR UTAMA, TETAPI ADA KEMUNGKINAN ADA FITUR LAIN YANG BELUM DISEBUTKAN**)
+HTTP (Hypertext Transfer Protocol)
 http_response_body_len → Panjang (dalam byte) dari body HTTP response yang diterima oleh client.
 http_resp_mime_types → Tipe MIME dari respons HTTP (misal: text/html, application/json, image/png).
 http_request_body_len → Panjang (dalam byte) dari body HTTP request yang dikirim client.
@@ -470,14 +470,14 @@ http_method → Metode HTTP yang digunakan (GET, POST, PUT, DELETE).
 http_status_code → Kode status HTTP yang dikirim oleh server (200, 404, 500, dll.).
 http_version → Versi HTTP yang digunakan (HTTP/1.1, HTTP/2).
 http_uri → Alamat lengkap dari permintaan HTTP (misal: /login.php, /api/data).
-2️⃣ SSL/TLS (Secure Socket Layer & Transport Layer Security)
+SSL/TLS (Secure Socket Layer & Transport Layer Security)
 ssl_issuer → Nama organisasi yang menerbitkan sertifikat SSL (Let's Encrypt, DigiCert).
 ssl_subject → Nama entitas yang menggunakan sertifikat SSL (www.google.com).
 ssl_cipher → Algoritma enkripsi yang digunakan dalam SSL/TLS (TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256).
 ssl_version → Versi protokol SSL/TLS (TLS 1.2, TLS 1.3).
 ssl_resumed → Apakah koneksi SSL/TLS menggunakan sesi sebelumnya (True/False).
 ssl_established → Apakah koneksi SSL/TLS berhasil terjalin (True/False).
-3️⃣ DNS (Domain Name System)
+DNS (Domain Name System)
 dns_rcode (DNS Response Code) → Kode status dari server DNS (0 = NoError, 3 = NXDomain, dll.).
 dns_qclass (DNS Query Class) → Jenis permintaan DNS (1 = IN - Internet).
 dns_qtype (DNS Query Type) → Jenis permintaan DNS (A, AAAA, MX, CNAME, TXT).
@@ -486,7 +486,7 @@ dns_RA (Recursion Available) → Apakah server DNS mendukung recursive queries (
 dns_RD (Recursion Desired) → Apakah client meminta recursive DNS lookup (True/False).
 dns_AA (Authoritative Answer) → Apakah server DNS memberikan jawaban authoritative (True/False).
 dns_query → Nama domain yang diminta dalam query DNS (misal: www.facebook.com).
-4️⃣ Jaringan & Koneksi
+Jaringan & Koneksi
 dst_port (Destination Port) → Port tujuan dari komunikasi jaringan (80, 443, 53, dll.).
 src_port (Source Port) → Port asal dari komunikasi jaringan.
 proto (Protocol) → Protokol jaringan yang digunakan (TCP, UDP, ICMP).
@@ -503,13 +503,13 @@ def generate_response(user_input, database_data):
     Gunakan data dari tabel 'hasilprediksi' untuk memberikan jawaban yang lebih akurat.
     """
     if database_data is None or database_data.empty:
-        return "⚠️ Tidak ada data yang tersedia dalam tabel 'hasilprediksi'."
+        return "Tidak ada data yang tersedia dalam tabel 'hasilprediksi'."
 
     # Pastikan data hanya mengandung informasi yang relevan untuk chatbot
     kolom_yang_diperlukan = ["id", "marker"]
 
     if not all(col in database_data.columns for col in kolom_yang_diperlukan):
-        return "⚠️ Tabel hasilprediksi tidak memiliki struktur yang sesuai."
+        return "Tabel hasilprediksi tidak memiliki struktur yang sesuai."
 
     database_context = database_data[kolom_yang_diperlukan].to_json(orient="records", indent=2)
 
@@ -529,7 +529,7 @@ def generate_response(user_input, database_data):
         response = model.generate_content(prompt, stream=True)
         return "".join(res.text for res in response)
     except Exception as e:
-        return f"❌ Error processing response: {str(e)}"
+        return f"Error processing response: {str(e)}"
 
 
 # Handle send button click
@@ -543,23 +543,20 @@ def handle_send():
             st.session_state["db_schema"] = get_database_schema()
 
         if st.session_state["db_schema"] is None:
-            st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
-            return  # ✅ Posisikan return di dalam fungsi
+            st.warning("Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
+            return  # Posisikan return di dalam fungsi
 
         if is_sql_query(user_text):
-            sql_query = ""  # ✅ Inisialisasi sql_query agar tidak kosong
+            sql_query = ""  # Inisialisasi sql_query agar tidak kosong
 
             try:
                 # Buat query SQL
                 sql_query = generate_sql_query(user_text)
 
                 # Jika terjadi error saat pembuatan query, tangani di sini
-                if not sql_query or sql_query.startswith("❌"):
-                    st.warning(f"❌ Query tidak valid: {sql_query}")
+                if not sql_query or sql_query.startswith("error"):
+                    st.warning(f"Query tidak valid: {sql_query}")
                     return  # Stop eksekusi jika query salah
-
-                # Debugging: tampilkan query sebelum dieksekusi
-                st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
 
                 # **Jalankan query SQL**
                 ai_response = execute_sql_query(sql_query)
