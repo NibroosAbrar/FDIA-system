@@ -272,6 +272,28 @@ def get_hasilprediksi_data():
         st.error(f"❌ Error fetching database data: {e}")
         return None
 
+def is_identity_question(user_input):
+    """Deteksi apakah pengguna bertanya tentang identitas chatbot."""
+    identity_keywords = [
+        "siapa kamu", "apa kamu", "kamu siapa", "apa itu sigma ai", 
+        "sigma ai itu apa", "perkenalkan dirimu", "ceritakan tentang dirimu",
+        "kamu dari mana", "apakah kamu manusia", "apa fungsi kamu", "tugas kamu apa"
+    ]
+    return any(keyword in user_input.lower() for keyword in identity_keywords)
+
+def is_database_feature(user_input):
+    """Deteksi apakah pertanyaan mengandung fitur dari database hasilprediksi."""
+    fitur_database = [
+        "id", "http_response_body_len", "dst_port", "dns_rcode", "dns_qclass", "dns_qtype", 
+        "src_port", "http_resp_mime_types", "http_request_body_len", "conn_state", 
+        "http_user_agent", "ssl_issuer", "ssl_subject", "http_orig_mime_types", 
+        "http_trans_depth", "http_method", "http_status_code", "http_version", 
+        "http_uri", "ssl_cipher", "ssl_version", "ssl_resumed", "ssl_established", 
+        "proto", "dns_rejected", "dns_RA", "dns_RD", "dns_AA", "service", 
+        "dns_query", "dst_ip_bytes"
+    ]
+    return any(fitur in user_input.lower() for fitur in fitur_database)
+
 def is_sql_query(user_input):
     """Deteksi apakah input pengguna adalah pertanyaan SQL atau tidak."""
     sql_keywords = ["select", "count", "group by", "order by", "where", "table", "column", "data", "jumlah", "berapa", "hitung"]
@@ -569,6 +591,19 @@ def handle_send():
             except Exception as e:
                 st.error(f"❌ Error processing SQL query: {str(e)}")
                 return
+                
+        if is_identity_question(user_text):
+            ai_response = "**Sigma AI** adalah asisten kecerdasan buatan yang dirancang untuk membantu dalam **keamanan siber**, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**. Saya dapat menjawab pertanyaan teknis, membantu analisis data, dan memberikan saran mitigasi terhadap serangan FDIA. Silakan tanyakan apa yang Anda butuhkan!"
+            
+            # **Simpan hasil dalam chat history**
+            st.session_state["chat_history"].append({"role": "user", "content": user_text})
+            st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
+            
+            # Kosongkan input setelah mengirim
+            st.session_state["input_text"] = ""
+            
+            return  # Hentikan eksekusi lebih lanjut
+
 
 
 
