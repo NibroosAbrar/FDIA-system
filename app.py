@@ -158,9 +158,8 @@ def is_sql_query(user_input):
     return any(word in user_input.lower() for word in sql_keywords)
 
 def generate_sql_query(user_input):
-    """Mengubah teks natural menjadi query SQL, tetapi hanya mengizinkan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.
-    MENOLAK query INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
-    """
+    """Mengubah teks natural menjadi query SQL yang valid."""
+    
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
@@ -191,10 +190,14 @@ def generate_sql_query(user_input):
 
     try:
         response = model.generate_content(prompt, stream=False)
-        y = response.text.strip()
+        sql_query = response.text.strip()
 
         # Hapus tanda ```sql atau ``` yang mungkin muncul
         sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
+
+        # Validasi query agar tidak kosong
+        if not sql_query:
+            return "❌ Error: Model tidak menghasilkan query yang valid."
 
         # Cegah query yang mengubah data
         forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
