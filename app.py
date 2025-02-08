@@ -142,13 +142,18 @@ def get_hasilprediksi_data():
             user=DB_USER,
             password=DB_PASSWORD
         )
-        query = "SELECT * FROM hasilprediksi;"  # ✅ Ambil data dari tabel 'hasilprediksi'
+        query = "SELECT * FROM hasilprediksi;"  # ✅ Ambil contoh data
         df = pd.read_sql_query(query, conn)
         conn.close()
+        
+        # **Debugging: Tampilkan hasil query**
+        st.write("✅ Database Connected! Sample Data:", df.head())
+
         return df
     except Exception as e:
         st.error(f"❌ Error fetching database data: {e}")
         return None
+
 
 def is_sql_query(user_input):
     """Deteksi apakah input pengguna adalah pertanyaan SQL atau tidak."""
@@ -173,8 +178,7 @@ def is_database_feature(user_input):
 
 
 def generate_sql_query(user_input):
-    """Mengubah teks natural menjadi query SQL yang valid."""
-
+    """Mengubah teks natural menjadi query SQL."""
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
@@ -182,40 +186,30 @@ def generate_sql_query(user_input):
 
     prompt = f"""
     Anda adalah AI yang mengubah teks natural menjadi SQL Query.
-    **Pastikan query hanya menggunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
+    **Hanya gunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
     
-    Berikut adalah skema tabel `hasilprediksi`:
+    Berikut skema tabel `hasilprediksi`:
     {schema_context}
-
-    Contoh mapping input ke query:
-    - "dst port yang paling banyak mengalami attack" ➝ `SELECT dst_port, COUNT(*) as jumlah FROM hasilprediksi WHERE marker = 'Attack' GROUP BY dst_port ORDER BY jumlah DESC LIMIT 1;`
-    - "berapa total attack?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Attack';`
-    - "berapa rata-rata nilai attack?" ➝ `SELECT AVG(nilai) FROM hasilprediksi WHERE marker = 'Attack';`
     
-    Sekarang buat query SQL yang sesuai untuk permintaan ini:
+    Permintaan pengguna:
     "{user_input}"
-    
-    **Hanya berikan query SQL tanpa format Markdown (tidak ada tanda ```sql atau ```).**
+
+    Buat query SQL yang sesuai (tanpa ```sql atau tanda kutip).
     """
 
     try:
         response = model.generate_content(prompt, stream=False)
         sql_query = response.text.strip()
 
-        # Hapus tanda ```sql atau ``` yang mungkin muncul
-        sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
-
-        # Validasi query agar tidak kosong
-        if not sql_query:
-            return "❌ Error: Model tidak menghasilkan query yang valid."
+        # **Debugging: Cek hasil query**
+        st.write(f"🔍 Generated SQL Query: {sql_query}")
 
         # Cegah query yang mengubah data
         forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
         if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
-            return "❌ Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
+            return "❌ Query tidak diizinkan."
 
         return sql_query
-
     except Exception as e:
         return f"❌ Error processing SQL query: {str(e)}"
 
@@ -563,33 +557,36 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """Menangani input pengguna dan memutuskan apakah pertanyaan perlu data dari database atau tidak."""
+    """Menangani input pengguna, menentukan apakah query SQL diperlukan atau tidak."""
     user_text = st.session_state["input_text"]
 
     if user_text.strip():
-        # **Pastikan skema database tersedia**
-        if "db_schema" not in st.session_state or not st.session_state["db_schema"]:
+        # **Pastikan database schema tersedia**
+        if "db_schema" not in st.session_state:
             st.session_state["db_schema"] = get_database_schema()
 
-        if not st.session_state["db_schema"]:
-            st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
-            return  # ✅ Stop eksekusi jika skema tidak tersedia
+        if st.session_state["db_schema"] is None:
+            st.warning("⚠️ Tidak dapat mengambil skema database.")
+            return
 
-        # **Cek apakah pertanyaan mengandung fitur database**
+        # **Debugging: Tampilkan input yang diterima**
+        st.write(f"🔍 User Input: {user_text}")
+
+        # **Cek apakah pertanyaan terkait fitur database**
         if is_database_feature(user_text):
             sql_query = generate_sql_query(user_text)
 
-            if not sql_query or sql_query.startswith("❌"):
-                st.warning(f"❌ Query tidak valid: {sql_query}")
-                return  # Stop eksekusi jika query salah
+            if sql_query.startswith("❌"):
+                st.warning(sql_query)  # ✅ Jika query tidak valid, tampilkan error
+                return
 
-            st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
+            # **Debugging: Lihat query SQL yang dibuat**
+            st.write(f"🧐 Query yang akan dijalankan: {sql_query}")
 
             # **Jalankan query SQL**
             ai_response = execute_sql_query(sql_query)
-
         else:
-            # **Gunakan model AI untuk menjawab pertanyaan umum**
+            # **Jawab dengan model AI jika tidak terkait database**
             ai_response = model.generate_content(user_text).text.strip()
 
         # **Simpan hasil dalam chat history**
@@ -597,10 +594,11 @@ def handle_send():
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
         # **Kosongkan input setelah mengirim**
-        st.session_state["input_text"] = ""  
+        st.session_state["input_text"] = ""
 
     else:
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
+
 
 
 # Handle clear button click
