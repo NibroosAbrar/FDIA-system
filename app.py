@@ -166,6 +166,8 @@ def generate_sql_query(user_input):
     schema_context = json.dumps(st.session_state["db_schema"], indent=2)
 
     prompt = f"""
+    **Nama Chatbot**: Sigma AI  
+    **Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**.  
     Anda adalah AI yang mengubah teks natural menjadi SQL Query.
     **Pastikan query hanya menggunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
     Query yang diperbolehkan:
@@ -377,9 +379,6 @@ def store_token():
 
 # Define a detailed base prompt
 BASE_PROMPT = """
-{json.dumps(dashboard_data, indent=2)}
-**Nama Chatbot**: Sigma AI  
-**Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**.  
 **Tugas Utama**:  
 1. **Menjawab pertanyaan teknis** tentang **FDIA, IIoT, dan keterkaitannya.  
 2. **Menjelaskan fitur dan fungsi platform Sigma Boys** jika diminta.  
