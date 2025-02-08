@@ -174,7 +174,7 @@ def is_database_feature(user_input):
 
 def generate_sql_query(user_input):
     """Mengubah teks natural menjadi query SQL yang valid."""
-    
+
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
@@ -183,19 +183,14 @@ def generate_sql_query(user_input):
     prompt = f"""
     Anda adalah AI yang mengubah teks natural menjadi SQL Query.
     **Pastikan query hanya menggunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
-    Query yang diperbolehkan:
-    - SELECT (mengambil data)
-    - COUNT (menghitung jumlah data)
-    - GROUP BY (mengelompokkan data)
-    - ORDER BY (mengurutkan data)
-    - WHERE (memfilter data)
     
     Berikut adalah skema tabel `hasilprediksi`:
     {schema_context}
-    
+
     Contoh mapping input ke query:
-    - "Berapa total attack?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Attack';`
-    - "Ada berapa natural?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Natural';`
+    - "dst port yang paling banyak mengalami attack" ➝ `SELECT dst_port, COUNT(*) as jumlah FROM hasilprediksi WHERE marker = 'Attack' GROUP BY dst_port ORDER BY jumlah DESC LIMIT 1;`
+    - "berapa total attack?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Attack';`
+    - "berapa rata-rata nilai attack?" ➝ `SELECT AVG(nilai) FROM hasilprediksi WHERE marker = 'Attack';`
     
     Sekarang buat query SQL yang sesuai untuk permintaan ini:
     "{user_input}"
