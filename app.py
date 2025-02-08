@@ -561,13 +561,28 @@ def handle_send():
             st.warning("⚠️ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
             return  # ✅ Posisikan return di dalam fungsi
 
-        # **Cek apakah input perlu diproses sebagai query SQL**
         if is_sql_query(user_text):
-            # Buat query SQL
-            sql_query = generate_sql_query(user_text)
+            sql_query = ""  # ✅ Inisialisasi variabel terlebih dahulu
+        
+            try:
+                # Buat query SQL
+                sql_query = generate_sql_query(user_text)
+        
+                # Cek jika terjadi error saat pembuatan query
+                if sql_query.startswith("❌"):
+                    st.warning(sql_query)
+                    return
+        
+                # Debugging: tampilkan query sebelum dieksekusi
+                st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
+        
+                # **Jalankan query SQL**
+                ai_response = execute_sql_query(sql_query)
+        
+            except Exception as e:
+                st.error(f"❌ Error processing SQL query: {str(e)}")
+                return
 
-            # Debug: tampilkan query sebelum dieksekusi
-            st.write(f"🧐 Debug: Query yang akan dijalankan - '{sql_query}'")
 
             # **Cek apakah query valid sebelum dieksekusi**
             if sql_query.startswith("❌"):
