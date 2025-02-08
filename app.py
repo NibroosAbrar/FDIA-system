@@ -301,6 +301,7 @@ def generate_sql_query(user_input):
     
     Berikut adalah skema tabel `hasilprediksi`:
     {schema_context}
+    {BASE_PROMPT}
     
     Contoh mapping input ke query:
     - "Berapa total attack?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Attack';`
