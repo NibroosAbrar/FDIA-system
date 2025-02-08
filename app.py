@@ -508,7 +508,7 @@ def store_token():
 
     return jsonify({"message": "Token stored successfully"}), 200
 
-def generate_response(user_input, database_data):
+def generate_response(user_input, identity input, database_data):
     """
     Menggunakan base prompt agar Sigma AI selalu menjawab berdasarkan informasi dari database 'hasilprediksi'.
     """
@@ -549,72 +549,69 @@ def generate_response(user_input, database_data):
 
 # Handle send button click
 def handle_send():
-    """Menangani input pengguna, baik sebagai pertanyaan SQL atau pertanyaan umum."""
-    user_text = st.session_state["input_text"]
+    """Menangani input pengguna, baik sebagai pertanyaan SQL, identitas, atau pertanyaan umum."""
+    user_text = st.session_state["input_text"].strip()
 
-    if user_text.strip():
-        # **Pastikan skema database tersedia**
-        if "db_schema" not in st.session_state:
-            st.session_state["db_schema"] = get_database_schema()
+    if not user_text:
+        st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
+        return  # **Hentikan eksekusi jika input kosong**
 
-        if st.session_state["db_schema"] is None:
-            st.warning("Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
-            return  # Posisikan return di dalam fungsi
-
-        if is_sql_query(user_text):
-            sql_query = ""  # Inisialisasi sql_query agar tidak kosong
-
-            try:
-                # Buat query SQL
-                sql_query = generate_sql_query(user_text)
-
-                # Jika terjadi error saat pembuatan query, tangani di sini
-                if not sql_query or sql_query.startswith("error"):
-                    st.warning(f"Query tidak valid: {sql_query}")
-                    return  # Stop eksekusi jika query salah
-
-                # **Jalankan query SQL**
-                ai_response = execute_sql_query(sql_query)
-
-            except Exception as e:
-                st.error(f"❌ Error processing SQL query: {str(e)}")
-                return
-                
-        if is_identity_question(user_text):
-            ai_response = "**Sigma AI** adalah asisten kecerdasan buatan yang dirancang untuk membantu dalam **keamanan siber**, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**. Saya dapat menjawab pertanyaan teknis, membantu analisis data, dan memberikan saran mitigasi terhadap serangan FDIA. Silakan tanyakan apa yang Anda butuhkan!"
-            
-            # **Simpan hasil dalam chat history**
-            st.session_state["chat_history"].append({"role": "user", "content": user_text})
-            st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
-            
-            # Kosongkan input setelah mengirim
-            st.session_state["input_text"] = ""
-            
-            return  # Hentikan eksekusi lebih lanjut
-
-
-
-
-            # **Cek apakah query valid sebelum dieksekusi**
-            if sql_query.startswith("❌"):
-                st.warning(sql_query)  # Tampilkan pesan error
-                return  # ✅ Posisikan return di dalam fungsi
-
-            # **Jalankan query SQL**
-            ai_response = execute_sql_query(sql_query)
-        else:
-            # **Jika bukan SQL, gunakan model AI untuk menjawab pertanyaan**
-            ai_response = model.generate_content(user_text).text.strip()
-
+    # 📌 **Cek apakah pengguna bertanya tentang identitas chatbot terlebih dahulu**
+    if is_identity_question(user_text):
+        ai_response = (
+            "🔹 **Saya adalah Sigma AI**, asisten kecerdasan buatan yang dirancang untuk membantu dalam "
+            "**keamanan siber**, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** "
+            "pada sistem **Industrial Internet of Things (IIoT)**. Saya dapat menjawab pertanyaan teknis, membantu analisis data, "
+            "dan memberikan saran mitigasi terhadap serangan FDIA. Silakan tanyakan apa yang Anda butuhkan! 🚀"
+        )
+        
         # **Simpan hasil dalam chat history**
         st.session_state["chat_history"].append({"role": "user", "content": user_text})
         st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
-
+        
         # **Kosongkan input setelah mengirim**
-        st.session_state["input_text"] = ""  
+        st.session_state["input_text"] = ""
+        return  # **Hentikan eksekusi di sini, agar tidak lanjut ke SQL atau AI model**
+    
+    # 📌 **Cek apakah skema database tersedia**
+    if "db_schema" not in st.session_state:
+        st.session_state["db_schema"] = get_database_schema()
 
+    if st.session_state["db_schema"] is None:
+        st.warning("❌ Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
+        return  # **Hentikan eksekusi jika skema database tidak tersedia**
+
+    # 📌 **Cek apakah input adalah query SQL**
+    if is_sql_query(user_text):
+        sql_query = ""  # Inisialisasi sql_query agar tidak kosong
+
+        try:
+            # **Buat query SQL**
+            sql_query = generate_sql_query(user_text)
+
+            # **Cek validitas query sebelum dieksekusi**
+            if not sql_query or sql_query.startswith("error"):
+                st.warning(f"❌ Query tidak valid: {sql_query}")
+                return  # **Stop eksekusi jika query salah**
+
+            # **Jalankan query SQL**
+            ai_response = execute_sql_query(sql_query)
+
+        except Exception as e:
+            st.error(f"❌ Error processing SQL query: {str(e)}")
+            return
+        
     else:
-        st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
+        # 📌 **Jika bukan SQL atau identitas, gunakan model AI untuk menjawab pertanyaan**
+        ai_response = model.generate_content(user_text).text.strip()
+
+    # 📌 **Simpan hasil dalam chat history**
+    st.session_state["chat_history"].append({"role": "user", "content": user_text})
+    st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
+
+    # **Kosongkan input setelah mengirim**
+    st.session_state["input_text"] = ""
+
 
 
 
