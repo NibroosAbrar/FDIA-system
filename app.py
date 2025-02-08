@@ -280,53 +280,58 @@ def is_sql_query(user_input):
     return any(word in user_input.lower() for word in sql_keywords)
 
 def generate_sql_query(user_input):
-    """Mengubah teks natural menjadi query SQL dengan base prompt."""
+    """Mengubah teks natural menjadi query SQL yang valid."""
 
     if "db_schema" not in st.session_state or st.session_state["db_schema"] is None:
         return "❌ Database schema belum tersedia. Silakan jalankan `get_database_schema()` terlebih dahulu."
 
     schema_context = json.dumps(st.session_state["db_schema"], indent=2)
 
-    # Gabungkan base prompt dengan instruksi pembuatan query
-    full_prompt = f"""
-    {BASE_PROMPT}
-
-    **📊 Database Schema (hasilprediksi)**:
+    prompt = f"""
+    **Nama Chatbot**: Sigma AI  
+    **Peran**: Asisten AI yang ahli dalam keamanan siber, khususnya dalam mendeteksi dan mengurangi **False Data Injection Attacks (FDIA)** pada sistem **Industrial Internet of Things (IIoT)**.  
+    Anda adalah AI yang mengubah teks natural menjadi SQL Query.
+    **Pastikan query hanya menggunakan SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE.**
+    Query yang diperbolehkan:
+    - SELECT (mengambil data)
+    - COUNT (menghitung jumlah data)
+    - GROUP BY (mengelompokkan data)
+    - ORDER BY (mengurutkan data)
+    - WHERE (memfilter data)
+    
+    Berikut adalah skema tabel `hasilprediksi`:
     {schema_context}
-
-    ❓ **Instruksi**:
-    - **Tugas Anda**: Buat query SQL berdasarkan permintaan berikut.
-    - **Hanya gunakan**: `SELECT`, `COUNT`, `FILTER`, `GROUP BY`, `ORDER BY`, `WHERE`
-    - **Tidak diizinkan**: `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`
-
-    🔍 **Pertanyaan Pengguna**:
+    
+    Contoh mapping input ke query:
+    - "Berapa total attack?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Attack';`
+    - "Ada berapa natural?" ➝ `SELECT COUNT(*) FROM hasilprediksi WHERE marker = 'Natural';`
+    
+    Sekarang buat query SQL yang sesuai untuk permintaan ini:
     "{user_input}"
-
-    📝 **Query SQL yang Harus Dihasilkan**:
-    - Harus benar sesuai dengan tabel `hasilprediksi`
-    - Tidak boleh mengubah data di dalam database
-    - Format yang benar tanpa syntax error
+    
+    **Hanya berikan query SQL tanpa format Markdown (tidak ada tanda ```sql atau ```).**
     """
 
     try:
-        response = model.generate_content(full_prompt, stream=False)
+        response = model.generate_content(prompt, stream=False)
         sql_query = response.text.strip()
 
-        # Hapus format SQL yang tidak diperlukan
+        # Hapus tanda ```sql atau ``` yang mungkin muncul
         sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
 
-        # Cegah query yang tidak valid
+        # Validasi query agar tidak kosong
+        if not sql_query:
+            return "Error: Model tidak menghasilkan query yang valid."
+
+        # Cegah query yang mengubah data
         forbidden_keywords = ["insert", "update", "delete", "drop", "alter", "truncate"]
         if any(keyword in sql_query.lower() for keyword in forbidden_keywords):
-            return "❌ Query tidak diizinkan. Hanya SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang boleh digunakan."
+            return "Query tidak diizinkan. Hanya query SELECT, COUNT, FILTER, GROUP BY, ORDER BY, dan WHERE yang dapat dieksekusi."
 
         return sql_query
 
     except Exception as e:
-        return f"❌ Error processing SQL query: {str(e)}"
-
-
-
+        return f"Error processing SQL query: {str(e)}"
 
 def execute_sql_query(sql_query):
     """Eksekusi SQL Query yang diberikan dan kembalikan hasil dalam format teks."""
