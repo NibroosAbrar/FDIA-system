@@ -558,7 +558,6 @@ def generate_response(user_input, database_data):
 
 
 
-# Handle send button click
 def handle_send():
     """Menangani input pengguna, baik sebagai pertanyaan SQL, identitas, atau pertanyaan umum."""
     user_text = st.session_state["input_text"].strip()
@@ -575,14 +574,33 @@ def handle_send():
             "pada sistem **Industrial Internet of Things (IIoT)**. Saya dapat menjawab pertanyaan teknis, membantu analisis data, "
             "dan memberikan saran mitigasi terhadap serangan FDIA. Silakan tanyakan apa yang Anda butuhkan!"
         )
+
     else:
-        # Pastikan data dari database tersedia
+        # **Pastikan skema database sudah tersedia sebelum membuat query SQL**
+        if "db_schema" not in st.session_state:
+            st.session_state["db_schema"] = get_database_schema()
+        
+        if st.session_state["db_schema"] is None:
+            st.warning("⚠ Tidak dapat mengambil skema database. Pastikan database tersedia.")
+            return  # **Hentikan eksekusi jika skema database tidak tersedia**
+
+        # **Pastikan data serangan terbaru tersedia sebelum menjawab pertanyaan mitigasi**
         database_data = get_hasilprediksi_data()
+        
+        if database_data is None or database_data.empty:
+            database_context = "⚠ Tidak ada data serangan yang tersedia di database."
+        else:
+            database_context = database_data.to_json(orient="records", indent=2)
 
         # Jika input adalah pertanyaan SQL
         if is_sql_query(user_text):
             sql_query = generate_sql_query(user_text)
-            ai_response = execute_sql_query(sql_query)
+
+            # **Cek apakah query yang dihasilkan valid atau hanya pesan error**
+            if sql_query.lower().startswith("error") or "❌" in sql_query:
+                ai_response = "⚠ Query tidak valid. Silakan coba lagi dengan pertanyaan lain."
+            else:
+                ai_response = execute_sql_query(sql_query)
         
         # Jika input berkaitan dengan mitigasi serangan, gunakan database
         elif "mengatasi" in user_text or "mitigasi" in user_text or "mencegah" in user_text:
@@ -590,14 +608,29 @@ def handle_send():
         
         # Jika input umum, gunakan AI generatif
         else:
-            ai_response = model.generate_content(user_text).text.strip()
+            ai_prompt = f"""
+            {BASE_PROMPT}
 
-    # Simpan hasil dalam chat history
+            **Data Serangan yang Ada:**
+            {database_context}
+
+            **Pertanyaan Pengguna:**
+            "{user_text}"
+
+            **Jawaban yang Diharapkan:**
+            - Harus berbasis data serangan jika relevan.
+            - Jika data tidak tersedia, berikan jawaban berdasarkan best practice keamanan siber.
+            - Jawaban harus profesional, informatif, dan spesifik.
+            """
+            ai_response = model.generate_content(ai_prompt).text.strip()
+
+    # **Simpan hasil dalam chat history**
     st.session_state["chat_history"].append({"role": "user", "content": user_text})
     st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
-    # Kosongkan input setelah mengirim
+    # **Kosongkan input setelah mengirim**
     st.session_state["input_text"] = ""
+
 
 
 
