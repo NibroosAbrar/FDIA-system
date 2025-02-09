@@ -509,41 +509,52 @@ def store_token():
     return jsonify({"message": "Token stored successfully"}), 200
 
 def generate_response(user_input, database_data):
-    """
-    Menggunakan base prompt agar Sigma AI selalu menjawab berdasarkan informasi dari database 'hasilprediksi'.
-    """
-
+    """Menghasilkan respons yang mempertimbangkan data serangan terbaru dari database."""
+    
     if database_data is None or database_data.empty:
-        return "Tidak ada data yang tersedia dalam tabel 'hasilprediksi'."
+        return "Tidak ada data serangan yang tersedia dalam database."
 
-    kolom_yang_diperlukan = ["id", "marker"]
-    if not all(col in database_data.columns for col in kolom_yang_diperlukan):
-        return "Tabel hasilprediksi tidak memiliki struktur yang sesuai."
+    # Ambil serangan terbaru
+    latest_attack = database_data.iloc[-1].to_dict()  # Ambil semua detail serangan terbaru
+    attack_type = latest_attack.get("marker", "Unknown Attack")  # Ambil jenis serangan
 
-    database_context = database_data[kolom_yang_diperlukan].to_json(orient="records", indent=2)
+    # Daftar langkah mitigasi berdasarkan kategori serangan
+    mitigation_steps = {
+        "FDIA - Sensor Manipulation": "Gunakan validasi data berbasis ML dan checksum untuk mendeteksi perubahan anomali.",
+        "FDIA - Network Injection": "Gunakan firewall rules dan IDS/IPS untuk memblokir traffic mencurigakan.",
+        "FDIA - Data Tampering": "Gunakan enkripsi end-to-end dan audit log untuk mendeteksi perubahan data.",
+    }
+    
+    # Ambil langkah mitigasi yang sesuai, jika tidak ditemukan gunakan default
+    base_mitigation = mitigation_steps.get(attack_type, "Langkah mitigasi belum tersedia untuk jenis serangan ini.")
+    
+    # Tambahkan detail serangan terbaru sebagai konteks
+    attack_context = json.dumps(latest_attack, indent=2)
 
-    # Gabungkan base prompt dengan input pengguna
-    full_prompt = f"""
-    {BASE_PROMPT}
+    ai_prompt = f"""
+    Anda adalah asisten keamanan siber yang membantu mendeteksi dan mengatasi False Data Injection Attacks (FDIA) dalam sistem Industrial IoT (IIoT).
 
-    **Data Hasil Prediksi yang Ada**:
-    {database_context}
+    **Berikut adalah data serangan terbaru yang terdeteksi di sistem:**
+    {attack_context}
 
-    **Pertanyaan Pengguna**:
-    "{user_input}"
+    **Strategi mitigasi dasar untuk serangan ini adalah sebagai berikut:**
+    {base_mitigation}
 
-    **Jawaban yang Harus Diberikan**:
-    - Harus berdasarkan data yang tersedia.
-    - Jika data tidak ditemukan, jawab secara eksplisit.
-    - Jangan berasumsi jika tidak ada data terkait.
+    **Tugas Anda:**
+    - Gunakan informasi serangan di atas untuk memberikan respons yang lebih spesifik dan kaya.
+    - Tambahkan detail seperti langkah-langkah investigasi lebih lanjut atau teknologi yang dapat digunakan.
+    - Pastikan respons terdengar alami dan profesional.
+
+    **Jawaban yang diharapkan:**
     """
 
+    # Gunakan AI untuk membuat respons yang lebih fleksibel
     try:
-        response = model.generate_content(full_prompt, stream=False)
-        return response.text.strip()
-
+        ai_response = model.generate_content(ai_prompt, stream=False)
+        return ai_response.text.strip()
     except Exception as e:
-        return f"Error processing response: {str(e)}"
+        return f"Terjadi kesalahan dalam AI response: {str(e)}. Menggunakan langkah mitigasi default:\n\n{base_mitigation}"
+
 
 
 
@@ -556,7 +567,7 @@ def handle_send():
         st.warning("Input tidak boleh kosong. Silakan ketik sesuatu!")
         return  # **Hentikan eksekusi jika input kosong**
 
-    # **Cek apakah pengguna bertanya tentang identitas chatbot terlebih dahulu**
+    # Cek apakah pertanyaan tentang identitas chatbot
     if is_identity_question(user_text):
         ai_response = (
             "Saya adalah Sigma AI, asisten kecerdasan buatan yang dirancang untuk membantu dalam "
@@ -564,53 +575,30 @@ def handle_send():
             "pada sistem **Industrial Internet of Things (IIoT)**. Saya dapat menjawab pertanyaan teknis, membantu analisis data, "
             "dan memberikan saran mitigasi terhadap serangan FDIA. Silakan tanyakan apa yang Anda butuhkan!"
         )
-        
-        # **Simpan hasil dalam chat history**
-        st.session_state["chat_history"].append({"role": "user", "content": user_text})
-        st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
-        
-        # **Kosongkan input setelah mengirim**
-        st.session_state["input_text"] = ""
-        return  # **Hentikan eksekusi di sini, agar tidak lanjut ke SQL atau AI model**
-    
-    # **Cek apakah skema database tersedia**
-    if "db_schema" not in st.session_state:
-        st.session_state["db_schema"] = get_database_schema()
-
-    if st.session_state["db_schema"] is None:
-        st.warning("Tidak dapat mengambil skema database. Periksa koneksi PostgreSQL.")
-        return  # **Hentikan eksekusi jika skema database tidak tersedia**
-
-    # **Cek apakah input adalah query SQL**
-    if is_sql_query(user_text):
-        sql_query = ""  # Inisialisasi sql_query agar tidak kosong
-
-        try:
-            # **Buat query SQL**
-            sql_query = generate_sql_query(user_text)
-
-            # **Cek validitas query sebelum dieksekusi**
-            if not sql_query or sql_query.startswith("error"):
-                st.warning(f"Query tidak valid: {sql_query}")
-                return  # **Stop eksekusi jika query salah**
-
-            # **Jalankan query SQL**
-            ai_response = execute_sql_query(sql_query)
-
-        except Exception as e:
-            st.error(f"Error processing SQL query: {str(e)}")
-            return
-        
     else:
-        # **Jika bukan SQL atau identitas, gunakan model AI untuk menjawab pertanyaan**
-        ai_response = model.generate_content(user_text).text.strip()
+        # Pastikan data dari database tersedia
+        database_data = get_hasilprediksi_data()
 
-    # **Simpan hasil dalam chat history**
+        # Jika input adalah pertanyaan SQL
+        if is_sql_query(user_text):
+            sql_query = generate_sql_query(user_text)
+            ai_response = execute_sql_query(sql_query)
+        
+        # Jika input berkaitan dengan mitigasi serangan, gunakan database
+        elif "mengatasi" in user_text or "mitigasi" in user_text or "mencegah" in user_text:
+            ai_response = generate_response(user_text, database_data)
+        
+        # Jika input umum, gunakan AI generatif
+        else:
+            ai_response = model.generate_content(user_text).text.strip()
+
+    # Simpan hasil dalam chat history
     st.session_state["chat_history"].append({"role": "user", "content": user_text})
     st.session_state["chat_history"].append({"role": "ai", "content": ai_response})
 
-    # **Kosongkan input setelah mengirim**
+    # Kosongkan input setelah mengirim
     st.session_state["input_text"] = ""
+
 
 
 
